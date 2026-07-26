@@ -216,27 +216,52 @@ export default function Home() {
       <section className="hero">
         <div className="hero-copy">
           <div className="eyebrow"><span>免费</span> 餐饮菜单风险体检</div>
-          <h1>3分钟，检查你的菜单<br /><em>有没有被投诉和处罚的风险</em></h1>
-          <p>在顾客、职业索赔人和监管人员发现问题之前，先把容易引发争议的菜名、宣传和商品描述找出来。</p>
+          <h1>约3分钟，检查你的菜单<br /><em>是否存在投诉与处罚风险</em></h1>
+          <p>上传菜单，我们会检查命名、宣传用语、商品描述等内容，并给出可直接使用的整改建议和法规依据。</p>
           <button className="hero-cta" onClick={() => openTool("menu")}>免费检测菜单 <b>→</b></button>
-          <small className="hero-note">无需注册 · 首次免费 · 约3分钟</small>
+          <small className="hero-note">无需注册 · 首次免费体验</small>
         </div>
-        <div className="hero-report" aria-label="餐盾风险报告预览">
-          <div className="preview-head"><b>菜单体检预览</b><span>已完成</span></div>
-          <div className="preview-summary">
-            <div className="preview-score"><strong>72</strong><small>风险评分</small></div>
-            <div><small>本次发现</small><h3>4处值得修改</h3><p><i /> 高风险 2　<em /> 中风险 1</p></div>
+        <div className="hero-report report-placeholder" aria-label="菜单检测报告内容预览">
+          <div className="preview-head"><b>你的菜单检测报告</b><span>检测后生成</span></div>
+          <p className="placeholder-intro">上传菜单并完成检测后，这里将展示基于实际内容生成的风险报告。</p>
+          <div className="placeholder-list">
+            <div><b>01</b><span><strong>风险评分</strong><small>根据本次菜单内容综合呈现</small></span><em>待检测</em></div>
+            <div><b>02</b><span><strong>高风险项目</strong><small>标出需要优先处理的具体位置</small></span><em>待检测</em></div>
+            <div><b>03</b><span><strong>修改建议</strong><small>提供可以直接使用的整改文案</small></span><em>待检测</em></div>
+            <div><b>04</b><span><strong>法规依据</strong><small>说明建议所对应的规范依据</small></span><em>待检测</em></div>
           </div>
-          <div className="preview-item"><span>高风险</span><div><b>“蟹肉棒”可能引人误解</b><small>建议修改为：蟹味棒</small></div></div>
-          <div className="preview-item medium"><span>中风险</span><div><b>“纯天然”缺少证明依据</b><small>建议改为客观产品描述</small></div></div>
-          <div className="preview-time">预计 8 分钟可完成全部整改</div>
         </div>
       </section>
 
       <section className="trust-strip">
-        <div><b>法</b><span><strong>根据真实法规</strong>说明判断依据，不凭感觉下结论</span></div>
-        <div><b>诉</b><span><strong>覆盖高频投诉场景</strong>聚焦餐饮商家真正容易踩的坑</span></div>
-        <div><b>改</b><span><strong>给出可执行整改建议</strong>不只提示问题，直接告诉你怎么改</span></div>
+        <div><b>法</b><span><strong>引用真实法规</strong>不是AI猜测，每条建议均对应法规依据</span></div>
+        <div><b>诉</b><span><strong>聚焦真实风险</strong>覆盖餐饮商家高频投诉与处罚场景</span></div>
+        <div><b>改</b><span><strong>可直接整改</strong>不仅指出问题，还提供建议文案</span></div>
+      </section>
+
+      <section className="why-section">
+        <div className="content-heading">
+          <p>菜单表达也需要合规</p>
+          <h2>为什么现在就应该检查菜单？</h2>
+          <span>很多处罚不是因为食品安全，而是因为菜单表达。</span>
+        </div>
+        <div className="example-grid">
+          <article>
+            <span>商品名称</span>
+            <div className="example-flow"><b>蟹肉棒</b><i>→</i><strong>商品名称争议</strong></div>
+            <p>建议改为：蟹味棒</p>
+          </article>
+          <article>
+            <span>制作描述</span>
+            <div className="example-flow"><b>纯手工</b><i>→</i><strong>缺乏依据</strong></div>
+            <p>删除或保留证明材料</p>
+          </article>
+          <article>
+            <span>宣传用语</span>
+            <div className="example-flow"><b>最好吃</b><i>→</i><strong>绝对化宣传</strong></div>
+            <p>修改描述</p>
+          </article>
+        </div>
       </section>
 
       <section className="tool-section">
@@ -255,8 +280,9 @@ export default function Home() {
             <p>支持上传菜单截图或粘贴文字。检查命名、原料描述、宣传用语和规格信息，生成一份可以直接照着改的报告。</p>
             <ul><li>标出具体问题</li><li>展示法规依据</li><li>一键复制整改文案</li></ul>
           </div>
-          <strong>开始免费体检 →</strong>
+          <strong>免费检测菜单 →</strong>
         </button>
+        <small className="menu-feature-note">无需注册 · 首次免费体验</small>
         <div className="secondary-heading">
           <div><p>遇到具体问题时</p><h2>其他风险处理工具</h2></div>
           <span>先解决最急的事，再补上风险漏洞</span>
@@ -338,8 +364,9 @@ export default function Home() {
                   rows={5}
                 />
                 <button className="analyze-button" disabled={loading || (!files.length && !note.trim())} onClick={analyze}>
-                  {loading ? <><i /> 正在整理风险点…</> : <>开始分析 <span>→</span></>}
+                  {loading ? <><i /> 正在整理风险点…</> : <>{active === "menu" ? "免费检测菜单" : "开始分析"} <span>→</span></>}
                 </button>
+                {active === "menu" && <p className="cta-note">无需注册 · 首次免费体验</p>}
                 <p className="privacy-note">请先遮盖身份证号、手机号等不必要的个人信息。</p>
               </div>
             </div>
@@ -348,6 +375,21 @@ export default function Home() {
           )}
         </section>
       )}
+
+      <section className="deliverables">
+        <div className="content-heading">
+          <p>一份可以直接行动的报告</p>
+          <h2>检测完成后，你将获得</h2>
+        </div>
+        <div className="deliverable-grid">
+          <article><b>01</b><h3>风险评分</h3><p>快速了解当前菜单的整体风险情况。</p></article>
+          <article><b>02</b><h3>高风险位置</h3><p>准确定位需要优先处理的菜名和描述。</p></article>
+          <article><b>03</b><h3>法规依据</h3><p>查看每项判断所对应的规范依据。</p></article>
+          <article><b>04</b><h3>整改建议</h3><p>获得可复制、可直接使用的建议文案。</p></article>
+        </div>
+        <button className="section-cta" onClick={() => openTool("menu")}>免费检测菜单 <b>→</b></button>
+        <small className="section-cta-note">无需注册 · 首次免费体验</small>
+      </section>
 
       <section className="promise">
         <p>餐盾的方法</p>
