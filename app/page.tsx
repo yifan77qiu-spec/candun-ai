@@ -4,17 +4,16 @@ import { ChangeEvent, DragEvent, useMemo, useRef, useState } from "react";
 
 type ToolKey = "menu" | "complaint" | "regulator" | "copy";
 type Risk = {
-  level: "高风险" | "中风险" | "建议关注";
-  title: string;
-  detail: string;
+  level: "high" | "medium" | "low";
+  item: string;
+  reason: string;
   suggestion: string;
-  legal?: string;
+  legalReference: string;
 };
 type Analysis = {
   score: number;
   summary: string;
   risks: Risk[];
-  nextSteps: string[];
 };
 
 const tools: {
@@ -66,87 +65,6 @@ const exampleByTool: Record<ToolKey, string> = {
   copy: "例如：泉州百年老字号，0 添加、全上海最好吃的面线糊。",
 };
 
-const mockResults: Record<ToolKey, Analysis> = {
-  menu: {
-    score: 68,
-    summary: "发现 2 处可能引起消费者误解的菜单表述，建议在再次上线前完成修改。",
-    risks: [
-      {
-        level: "高风险",
-        title: "“蟹肉棒”可能与实际产品名称不一致",
-        detail: "如包装标注为“蟹味棒”或“风味蟹柳”，消费者可能理解为含有真实蟹肉。",
-        suggestion: "按照外包装名称改为“蟹味棒”，并保存包装、配料表及进货凭证。",
-        legal: "《消费者权益保护法》第二十条：经营者提供的信息应当真实、全面，不得作虚假或引人误解的宣传。",
-      },
-      {
-        level: "中风险",
-        title: "菜品原料描述缺少可核验依据",
-        detail: "“纯手工”“现熬”等表述需要与门店实际制作流程保持一致。",
-        suggestion: "不能持续证明的表述建议删除，改为客观口味或制作方式描述。",
-        legal: "《广告法》第四条：广告不得含有虚假或者引人误解的内容，不得欺骗、误导消费者。",
-      },
-    ],
-    nextSteps: ["核对所有原料外包装名称", "同步修改外卖平台与店内菜单", "留存修改前后截图和进货凭证"],
-  },
-  complaint: {
-    score: 57,
-    summary: "当前属于消费争议沟通阶段。先核实事实和诉求，不要急于承认欺诈或支付款项。",
-    risks: [
-      {
-        level: "高风险",
-        title: "对方援引法律并要求立即赔偿",
-        detail: "赔偿主张不等于已经被认定违法，需区分消费者诉求、行政调解与正式处罚。",
-        suggestion: "请对方明确事实、金额和依据；所有协商尽量留在书面渠道。",
-      },
-      {
-        level: "建议关注",
-        title: "现有证据可能不完整",
-        detail: "订单、页面原文、产品包装及双方沟通记录会影响后续判断。",
-        suggestion: "暂不删除或改动原记录，先完整截图，再进行页面整改。",
-      },
-    ],
-    nextSteps: ["保存订单和完整聊天记录", "核对商品与宣传事实", "通过平台或监管渠道确认调解范围"],
-  },
-  regulator: {
-    score: 61,
-    summary: "先确认这是投诉调解、举报核查还是已立案调查，再按对方要求准备真实材料。",
-    risks: [
-      {
-        level: "高风险",
-        title: "尚未确认程序性质",
-        detail: "电话沟通、行政调解、询问通知和责令改正的法律意义不同。",
-        suggestion: "礼貌询问承办单位、工作人员、事项编号及需要配合的具体内容。",
-      },
-      {
-        level: "中风险",
-        title: "口头说明容易出现偏差",
-        detail: "未经核实就表态，可能与采购凭证或平台页面不一致。",
-        suggestion: "按时间线整理事实，只陈述能由材料证明的内容，并记录已完成的整改。",
-      },
-    ],
-    nextSteps: ["确认承办信息和程序阶段", "整理营业资质、订单、进货与整改材料", "重要沟通后做书面确认"],
-  },
-  copy: {
-    score: 52,
-    summary: "文案中存在缺少证明的资历描述和绝对化表达，建议发布前改为客观描述。",
-    risks: [
-      {
-        level: "高风险",
-        title: "“老字号”“百年”需要充分依据",
-        detail: "这类资历、历史和荣誉表述应有真实、可核验的证明材料。",
-        suggestion: "如无证明，改为“闽南传统风味”或直接描述产品特点。",
-      },
-      {
-        level: "高风险",
-        title: "“最好吃”属于绝对化表达",
-        detail: "无法客观验证的最高级描述容易触发广告宣传风险。",
-        suggestion: "改为“招牌推荐”“店内人气口味”等非绝对化表达。",
-      },
-    ],
-    nextSteps: ["删除无依据的历史和荣誉表述", "替换绝对化用语", "发布前保存最终审核版本"],
-  },
-};
-
 export default function Home() {
   const [active, setActive] = useState<ToolKey | null>(null);
   const [files, setFiles] = useState<File[]>([]);
@@ -154,6 +72,7 @@ export default function Home() {
   const [dragging, setDragging] = useState(false);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Analysis | null>(null);
+  const [error, setError] = useState("");
   const fileInput = useRef<HTMLInputElement>(null);
   const selectedTool = tools.find((tool) => tool.key === active);
 
@@ -167,12 +86,26 @@ export default function Home() {
     setFiles([]);
     setNote("");
     setResult(null);
+    setError("");
     window.setTimeout(() => document.getElementById("workspace")?.scrollIntoView({ behavior: "smooth" }), 50);
   }
 
   function addFiles(list: FileList | null) {
     if (!list) return;
-    const next = Array.from(list).filter((file) => file.type.startsWith("image/")).slice(0, 6);
+    setError("");
+    const allowed = new Set(["image/png", "image/jpeg", "image/webp"]);
+    const incoming = Array.from(list);
+    const invalid = incoming.find((file) => !allowed.has(file.type));
+    const oversized = incoming.find((file) => file.size > 8 * 1024 * 1024);
+    if (invalid) {
+      setError("仅支持 JPG、PNG、WebP 格式的菜单图片。");
+      return;
+    }
+    if (oversized) {
+      setError(`图片“${oversized.name}”超过 8MB，请压缩后再上传。`);
+      return;
+    }
+    const next = incoming.slice(0, 6);
     setFiles((current) => [...current, ...next].slice(0, 6));
   }
 
@@ -180,16 +113,23 @@ export default function Home() {
     if (!active || (!files.length && !note.trim())) return;
     setLoading(true);
     setResult(null);
+    setError("");
     try {
+      const form = new FormData();
+      form.append("type", active);
+      form.append("note", note);
+      files.forEach((file) => form.append("images", file));
       const response = await fetch("/api/analyze", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: active, note, fileCount: files.length }),
+        body: form,
       });
-      const data = (await response.json()) as { result?: Analysis };
-      setResult(data.result ?? mockResults[active]);
-    } catch {
-      setResult(mockResults[active]);
+      const data = (await response.json()) as { result?: Analysis; error?: string };
+      if (!response.ok || !data.result) {
+        throw new Error(data.error || "检测失败，请稍后重试。");
+      }
+      setResult(data.result);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "网络连接失败，请稍后重试。");
     } finally {
       setLoading(false);
     }
@@ -200,6 +140,7 @@ export default function Home() {
     setResult(null);
     setFiles([]);
     setNote("");
+    setError("");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -366,6 +307,7 @@ export default function Home() {
                 <button className="analyze-button" disabled={loading || (!files.length && !note.trim())} onClick={analyze}>
                   {loading ? <><i /> 正在整理风险点…</> : <>{active === "menu" ? "免费检测菜单" : "开始分析"} <span>→</span></>}
                 </button>
+                {error && <p className="analysis-error" role="alert">{error}</p>}
                 {active === "menu" && <p className="cta-note">无需注册 · 首次免费体验</p>}
                 <p className="privacy-note">请先遮盖身份证号、手机号等不必要的个人信息。</p>
               </div>
@@ -413,10 +355,11 @@ export default function Home() {
 function ResultView({ result, title, onAgain }: { result: Analysis; title: string; onAgain: () => void }) {
   const tone = result.score >= 80 ? "safe" : result.score >= 60 ? "medium" : "high";
   const [copied, setCopied] = useState<number | "all" | null>(null);
+  const levelLabel = { high: "高风险", medium: "中风险", low: "低风险" } as const;
   const counts = {
-    high: result.risks.filter((risk) => risk.level === "高风险").length,
-    medium: result.risks.filter((risk) => risk.level === "中风险").length,
-    low: result.risks.filter((risk) => risk.level === "建议关注").length,
+    high: result.risks.filter((risk) => risk.level === "high").length,
+    medium: result.risks.filter((risk) => risk.level === "medium").length,
+    low: result.risks.filter((risk) => risk.level === "low").length,
   };
   const estimatedMinutes = Math.max(4, result.risks.length * 3);
 
@@ -427,8 +370,11 @@ function ResultView({ result, title, onAgain }: { result: Analysis; title: strin
   }
 
   const allSuggestions = result.risks
-    .map((risk, index) => `${index + 1}. ${risk.title}\n整改建议：${risk.suggestion}`)
+    .map((risk, index) => `${index + 1}. ${risk.item}\n整改建议：${risk.suggestion}`)
     .join("\n\n");
+  const nextSteps = result.risks.length
+    ? result.risks.map((risk) => risk.suggestion)
+    : ["保存本次检测报告", "上线前再次核对菜单与实际原料", "新增菜品后重新检测"];
 
   return (
     <div className="result-view">
@@ -453,14 +399,14 @@ function ResultView({ result, title, onAgain }: { result: Analysis; title: strin
           <h3 className="result-title">具体问题与整改建议 <span>{result.risks.length}</span></h3>
           <div className="risk-list">
             {result.risks.map((risk, index) => (
-              <article className="risk-card" key={risk.title}>
+              <article className="risk-card" key={`${risk.item}-${index}`}>
                 <div className="risk-card-head">
-                  <span className={`risk-badge risk-${risk.level}`}>{risk.level}</span>
+                  <span className={`risk-badge risk-${risk.level}`}>{levelLabel[risk.level]}</span>
                   <small>问题 {String(index + 1).padStart(2, "0")}</small>
                 </div>
-                <h4>{risk.title}</h4>
-                <p>{risk.detail}</p>
-                <div className="legal-basis"><b>法规 / 判断依据</b><span>{risk.legal ?? (risk.level === "建议关注" ? "经营风险优化建议：信息越清楚，越有助于减少消费争议。" : "根据《消费者权益保护法》《广告法》等相关规定，商品信息和宣传内容应当真实、准确，避免引人误解。")}</span></div>
+                <h4>{risk.item}</h4>
+                <p>{risk.reason}</p>
+                <div className="legal-basis"><b>法规 / 判断依据</b><span>{risk.legalReference}</span></div>
                 <div className="suggestion">
                   <div><b>建议处理</b><span>{risk.suggestion}</span></div>
                   <button onClick={() => copySuggestion(risk.suggestion, index)}>{copied === index ? "✓ 已复制" : "复制整改文案"}</button>
@@ -472,7 +418,7 @@ function ResultView({ result, title, onAgain }: { result: Analysis; title: strin
         <aside className="next-steps">
           <span className="step-label">行动清单</span>
           <h3>接下来这样做</h3>
-          {result.nextSteps.map((step, index) => (
+          {nextSteps.map((step, index) => (
             <label key={step}><input type="checkbox" /><span><b>{index + 1}</b>{step}</span></label>
           ))}
           <button className="copy-all-button" onClick={() => copySuggestion(allSuggestions, "all")}>{copied === "all" ? "✓ 已复制全部整改文案" : "一键复制全部整改文案"}</button>
