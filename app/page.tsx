@@ -8,6 +8,7 @@ type Risk = {
   title: string;
   detail: string;
   suggestion: string;
+  legal?: string;
 };
 type Analysis = {
   score: number;
@@ -75,12 +76,14 @@ const mockResults: Record<ToolKey, Analysis> = {
         title: "“蟹肉棒”可能与实际产品名称不一致",
         detail: "如包装标注为“蟹味棒”或“风味蟹柳”，消费者可能理解为含有真实蟹肉。",
         suggestion: "按照外包装名称改为“蟹味棒”，并保存包装、配料表及进货凭证。",
+        legal: "《消费者权益保护法》第二十条：经营者提供的信息应当真实、全面，不得作虚假或引人误解的宣传。",
       },
       {
         level: "中风险",
         title: "菜品原料描述缺少可核验依据",
         detail: "“纯手工”“现熬”等表述需要与门店实际制作流程保持一致。",
         suggestion: "不能持续证明的表述建议删除，改为客观口味或制作方式描述。",
+        legal: "《广告法》第四条：广告不得含有虚假或者引人误解的内容，不得欺骗、误导消费者。",
       },
     ],
     nextSteps: ["核对所有原料外包装名称", "同步修改外卖平台与店内菜单", "留存修改前后截图和进货凭证"],
@@ -211,26 +214,55 @@ export default function Home() {
       </header>
 
       <section className="hero">
-        <div className="eyebrow"><span>AI</span> 餐饮风险助手</div>
-        <h1>开店有风险，<br /><em>餐盾先帮你看一遍。</em></h1>
-        <p>上传菜单、投诉记录或宣传文案，快速发现风险，获得下一步可执行建议。</p>
-        <div className="trust-row">
-          <span>不替代律师意见</span>
-          <span>不自动保存原图</span>
-          <span>结果附整改步骤</span>
+        <div className="hero-copy">
+          <div className="eyebrow"><span>免费</span> 餐饮菜单风险体检</div>
+          <h1>3分钟，检查你的菜单<br /><em>有没有被投诉和处罚的风险</em></h1>
+          <p>在顾客、职业索赔人和监管人员发现问题之前，先把容易引发争议的菜名、宣传和商品描述找出来。</p>
+          <button className="hero-cta" onClick={() => openTool("menu")}>免费检测菜单 <b>→</b></button>
+          <small className="hero-note">无需注册 · 首次免费 · 约3分钟</small>
         </div>
+        <div className="hero-report" aria-label="餐盾风险报告预览">
+          <div className="preview-head"><b>菜单体检预览</b><span>已完成</span></div>
+          <div className="preview-summary">
+            <div className="preview-score"><strong>72</strong><small>风险评分</small></div>
+            <div><small>本次发现</small><h3>4处值得修改</h3><p><i /> 高风险 2　<em /> 中风险 1</p></div>
+          </div>
+          <div className="preview-item"><span>高风险</span><div><b>“蟹肉棒”可能引人误解</b><small>建议修改为：蟹味棒</small></div></div>
+          <div className="preview-item medium"><span>中风险</span><div><b>“纯天然”缺少证明依据</b><small>建议改为客观产品描述</small></div></div>
+          <div className="preview-time">预计 8 分钟可完成全部整改</div>
+        </div>
+      </section>
+
+      <section className="trust-strip">
+        <div><b>法</b><span><strong>根据真实法规</strong>说明判断依据，不凭感觉下结论</span></div>
+        <div><b>诉</b><span><strong>覆盖高频投诉场景</strong>聚焦餐饮商家真正容易踩的坑</span></div>
+        <div><b>改</b><span><strong>给出可执行整改建议</strong>不只提示问题，直接告诉你怎么改</span></div>
       </section>
 
       <section className="tool-section">
         <div className="section-heading">
           <div>
-            <p>从你现在遇到的问题开始</p>
-            <h2>今天需要处理什么？</h2>
+            <p>最适合第一次体验</p>
+            <h2>先把整份菜单检查一遍</h2>
           </div>
-          <span>选择一个入口</span>
+          <span>优先入口</span>
         </div>
-        <div className="tool-grid">
-          {tools.map((tool) => (
+        <button className="menu-feature" onClick={() => openTool("menu")}>
+          <div className="menu-feature-index">01</div>
+          <div>
+            <span>免费菜单体检</span>
+            <h3>把容易引发投诉的菜名和宣传，提前找出来</h3>
+            <p>支持上传菜单截图或粘贴文字。检查命名、原料描述、宣传用语和规格信息，生成一份可以直接照着改的报告。</p>
+            <ul><li>标出具体问题</li><li>展示法规依据</li><li>一键复制整改文案</li></ul>
+          </div>
+          <strong>开始免费体检 →</strong>
+        </button>
+        <div className="secondary-heading">
+          <div><p>遇到具体问题时</p><h2>其他风险处理工具</h2></div>
+          <span>先解决最急的事，再补上风险漏洞</span>
+        </div>
+        <div className="tool-grid secondary-tools">
+          {tools.filter((tool) => tool.key !== "menu").map((tool) => (
             <button className={`tool-card tool-${tool.key}`} key={tool.key} onClick={() => openTool(tool.key)}>
               <div className="tool-top">
                 <span className="tool-index">{tool.index}</span>
@@ -338,6 +370,24 @@ export default function Home() {
 
 function ResultView({ result, title, onAgain }: { result: Analysis; title: string; onAgain: () => void }) {
   const tone = result.score >= 80 ? "safe" : result.score >= 60 ? "medium" : "high";
+  const [copied, setCopied] = useState<number | "all" | null>(null);
+  const counts = {
+    high: result.risks.filter((risk) => risk.level === "高风险").length,
+    medium: result.risks.filter((risk) => risk.level === "中风险").length,
+    low: result.risks.filter((risk) => risk.level === "建议关注").length,
+  };
+  const estimatedMinutes = Math.max(4, result.risks.length * 3);
+
+  async function copySuggestion(text: string, key: number | "all") {
+    await navigator.clipboard.writeText(text);
+    setCopied(key);
+    window.setTimeout(() => setCopied(null), 1600);
+  }
+
+  const allSuggestions = result.risks
+    .map((risk, index) => `${index + 1}. ${risk.title}\n整改建议：${risk.suggestion}`)
+    .join("\n\n");
+
   return (
     <div className="result-view">
       <div className="result-hero">
@@ -346,13 +396,19 @@ function ResultView({ result, title, onAgain }: { result: Analysis; title: strin
         </div>
         <div>
           <span className="step-label">分析完成 / {title}</span>
-          <h2>{result.score >= 80 ? "整体风险较低" : result.score >= 60 ? "有几处需要尽快调整" : "建议先处理高风险项"}</h2>
+          <h2>《餐盾风险体检报告》</h2>
           <p>{result.summary}</p>
         </div>
       </div>
+      <div className="report-stats">
+        <div className="report-stat stat-high"><span>高风险</span><strong>{counts.high}</strong><small>建议立即处理</small></div>
+        <div className="report-stat stat-medium"><span>中风险</span><strong>{counts.medium}</strong><small>建议本周处理</small></div>
+        <div className="report-stat stat-low"><span>低风险</span><strong>{counts.low}</strong><small>建议顺手优化</small></div>
+        <div className="report-stat stat-time"><span>预计整改时间</span><strong>{estimatedMinutes} 分钟</strong><small>按建议逐项修改</small></div>
+      </div>
       <div className="result-columns">
         <div>
-          <h3 className="result-title">发现的风险 <span>{result.risks.length}</span></h3>
+          <h3 className="result-title">具体问题与整改建议 <span>{result.risks.length}</span></h3>
           <div className="risk-list">
             {result.risks.map((risk, index) => (
               <article className="risk-card" key={risk.title}>
@@ -362,7 +418,11 @@ function ResultView({ result, title, onAgain }: { result: Analysis; title: strin
                 </div>
                 <h4>{risk.title}</h4>
                 <p>{risk.detail}</p>
-                <div className="suggestion"><b>建议处理</b><span>{risk.suggestion}</span></div>
+                <div className="legal-basis"><b>法规 / 判断依据</b><span>{risk.legal ?? (risk.level === "建议关注" ? "经营风险优化建议：信息越清楚，越有助于减少消费争议。" : "根据《消费者权益保护法》《广告法》等相关规定，商品信息和宣传内容应当真实、准确，避免引人误解。")}</span></div>
+                <div className="suggestion">
+                  <div><b>建议处理</b><span>{risk.suggestion}</span></div>
+                  <button onClick={() => copySuggestion(risk.suggestion, index)}>{copied === index ? "✓ 已复制" : "复制整改文案"}</button>
+                </div>
               </article>
             ))}
           </div>
@@ -373,6 +433,7 @@ function ResultView({ result, title, onAgain }: { result: Analysis; title: strin
           {result.nextSteps.map((step, index) => (
             <label key={step}><input type="checkbox" /><span><b>{index + 1}</b>{step}</span></label>
           ))}
+          <button className="copy-all-button" onClick={() => copySuggestion(allSuggestions, "all")}>{copied === "all" ? "✓ 已复制全部整改文案" : "一键复制全部整改文案"}</button>
           <button onClick={() => window.print()}>保存 / 打印报告</button>
           <button className="again-button" onClick={onAgain}>重新分析</button>
         </aside>
