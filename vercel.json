@@ -1,11 +1,4 @@
 {
-  "framework": null,
-  "buildCommand": "pnpm run build",
-  "outputDirectory": "dist",
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ]
+  "framework": "nextjs",
+  "buildCommand": "pnpm exec next build"
 }
