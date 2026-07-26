@@ -1,4 +1,32 @@
-# vinext-starter
+# 餐盾 AI MVP
+
+餐饮菜单图片风险检测工具。浏览器只负责上传图片和展示报告；菜单图片与
+OpenAI API Key 均由服务端 Route Handler 处理。
+
+## 环境变量
+
+复制 `.env.example` 为 `.env.local`，填写：
+
+```bash
+OPENAI_API_KEY=你的服务端API密钥
+OPENAI_MODEL=gpt-5-mini
+```
+
+- `OPENAI_API_KEY` 必填，只能配置在本地服务端或 Vercel Project
+  Settings → Environment Variables。
+- `OPENAI_MODEL` 可选，默认使用 `gpt-5-mini`。
+- 不要使用 `NEXT_PUBLIC_` 前缀，也不要把真实密钥提交到 Git。
+- 在 Vercel 中至少勾选 Production；建议同时勾选 Preview 和 Development。
+- 新增或修改环境变量后，需要重新部署才会生效。
+
+## Vercel
+
+Vercel 使用标准 Next.js 构建，以确保 `app/api/analyze/route.ts` 作为
+服务端函数运行：
+
+```bash
+pnpm run build:vercel
+```
 
 A clean full-stack starter running on
 [vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and
