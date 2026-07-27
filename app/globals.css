@@ -187,6 +187,14 @@ textarea:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(22,79,62
 .analysis-error { margin: 12px 0 0; padding: 11px 13px; border: 1px solid #e7bcae; background: #fff1ec; color: #9a351c; border-radius: 4px; font-size: 12px; line-height: 1.6; }
 .risk-card h4 { font-family: Georgia, "Songti SC", serif; font-size: 22px; margin: 17px 0 8px; }
 .risk-card > p { color: var(--muted); line-height: 1.7; font-size: 13px; }
+.risk-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 13px 0; }
+.risk-meta span, .risk-detail { border: 1px solid var(--line); padding: 12px; color: var(--muted); font-size: 12px; line-height: 1.65; }
+.risk-meta b, .risk-detail > b { display: block; color: var(--green); font-size: 10px; letter-spacing: .08em; margin-bottom: 5px; }
+.risk-detail { margin-top: 10px; }
+.risk-detail p { margin: 0; }
+.risk-detail ul { margin: 0; padding-left: 18px; }
+.risk-detail li + li { margin-top: 5px; }
+.evidence-list { background: #f7f3eb; }
 .legal-basis { margin-top: 17px; border: 1px solid var(--line); background: #f7f3eb; padding: 13px; display: grid; grid-template-columns: 95px 1fr; gap: 10px; font-size: 11px; line-height: 1.6; }
 .legal-basis b { color: #9a6e31; }
 .legal-basis span { color: var(--muted); }
@@ -282,6 +290,7 @@ footer p:last-child { text-align: right; }
   .result-hero h2 { font-size: 31px; }
   .report-stats { grid-template-columns: repeat(2, 1fr); }
   .suggestion { align-items: flex-start; flex-direction: column; }
+  .risk-meta { grid-template-columns: 1fr; }
   .deliverables { padding-top: 75px; }
   .deliverable-grid { grid-template-columns: 1fr; }
   .deliverable-grid article { min-height: 175px; }
