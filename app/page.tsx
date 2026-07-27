@@ -71,11 +71,58 @@ const exampleByTool: Record<ToolKey, string> = {
   copy: "例如：泉州百年老字号，0 添加、全上海最好吃的面线糊。",
 };
 
+const UPLOAD_LIMITS = {
+  free: { maxFiles: 2, maxTotalBytes: 4 * 1024 * 1024 },
+  paid: { maxFiles: 6, maxTotalBytes: 12 * 1024 * 1024 },
+} as const;
+const ACTIVE_UPLOAD_TIER: keyof typeof UPLOAD_LIMITS = "free";
+const TARGET_IMAGE_BYTES = 1.1 * 1024 * 1024;
+
+function canvasToJpeg(canvas: HTMLCanvasElement, quality: number) {
+  return new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => blob ? resolve(blob) : reject(new Error("图片转换失败")),
+      "image/jpeg",
+      quality,
+    );
+  });
+}
+
+async function compressImageForUpload(file: File) {
+  const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+  try {
+    const maxSide = 1800;
+    const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+    canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("浏览器无法处理图片");
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+
+    let blob = await canvasToJpeg(canvas, 0.82);
+    for (const quality of [0.74, 0.66, 0.58]) {
+      if (blob.size <= TARGET_IMAGE_BYTES) break;
+      blob = await canvasToJpeg(canvas, quality);
+    }
+    if (blob.size > 1.2 * 1024 * 1024) {
+      throw new Error(`图片“${file.name}”压缩后仍过大，请裁剪后重试。`);
+    }
+    const stem = file.name.replace(/\.[^.]+$/, "") || "menu";
+    return new File([blob], `${stem}.jpg`, { type: "image/jpeg", lastModified: Date.now() });
+  } finally {
+    bitmap.close();
+  }
+}
+
 export default function Home() {
   const [active, setActive] = useState<ToolKey | null>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [note, setNote] = useState("");
   const [dragging, setDragging] = useState(false);
+  const [optimizing, setOptimizing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Analysis | null>(null);
   const [error, setError] = useState("");
@@ -96,23 +143,50 @@ export default function Home() {
     window.setTimeout(() => document.getElementById("workspace")?.scrollIntoView({ behavior: "smooth" }), 50);
   }
 
-  function addFiles(list: FileList | null) {
+  async function addFiles(list: FileList | null) {
     if (!list) return;
     setError("");
     const allowed = new Set(["image/png", "image/jpeg", "image/webp"]);
     const incoming = Array.from(list);
     const invalid = incoming.find((file) => !allowed.has(file.type));
-    const oversized = incoming.find((file) => file.size > 7 * 1024 * 1024);
     if (invalid) {
       setError("仅支持 JPG、PNG、WebP 格式的菜单图片。");
       return;
     }
-    if (oversized) {
-      setError(`图片“${oversized.name}”超过 7MB，请压缩后再上传。`);
+    const limit = UPLOAD_LIMITS[ACTIVE_UPLOAD_TIER];
+    const remaining = limit.maxFiles - files.length;
+    if (remaining <= 0) {
+      setError(`免费检测最多上传 ${limit.maxFiles} 张菜单图片。`);
       return;
     }
-    const next = incoming.slice(0, 6);
-    setFiles((current) => [...current, ...next].slice(0, 6));
+    const selected = incoming.slice(0, remaining);
+    console.info("[menu-upload] upload-start", {
+      imageCount: selected.length,
+      originalBytes: selected.reduce((sum, file) => sum + file.size, 0),
+    });
+    setOptimizing(true);
+    try {
+      const compressed = [];
+      for (const file of selected) compressed.push(await compressImageForUpload(file));
+      const nextFiles = [...files, ...compressed];
+      const totalBytes = nextFiles.reduce((sum, file) => sum + file.size, 0);
+      if (totalBytes > limit.maxTotalBytes) {
+        throw new Error("图片压缩后合计仍超过 4MB，请减少图片或裁剪后重试。");
+      }
+      console.info("[menu-upload] browser-compression-complete", {
+        imageCount: compressed.length,
+        compressedBytes: compressed.reduce((sum, file) => sum + file.size, 0),
+        totalUploadBytes: totalBytes,
+      });
+      setFiles(nextFiles);
+      if (incoming.length > remaining) {
+        setError(`免费检测最多上传 ${limit.maxFiles} 张，本次已保留前 ${remaining} 张。`);
+      }
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "图片处理失败，请重新选择。");
+    } finally {
+      setOptimizing(false);
+    }
   }
 
   async function analyze() {
@@ -265,7 +339,7 @@ export default function Home() {
                 <h2>{selectedTool.title}</h2>
                 <p>{selectedTool.description}</p>
                 <ol>
-                  <li><b>上传材料</b><span>截图最多 6 张，按发生顺序上传更准确</span></li>
+                  <li><b>上传材料</b><span>免费检测最多 2 张，上传前会自动压缩</span></li>
                   <li><b>补充情况</b><span>写清事实、金额、时间与当前进展</span></li>
                   <li><b>查看建议</b><span>先核实风险，再按步骤处理</span></li>
                 </ol>
@@ -277,10 +351,10 @@ export default function Home() {
                   onClick={() => fileInput.current?.click()}
                   onDragOver={(event: DragEvent) => { event.preventDefault(); setDragging(true); }}
                   onDragLeave={() => setDragging(false)}
-                  onDrop={(event: DragEvent) => { event.preventDefault(); setDragging(false); addFiles(event.dataTransfer.files); }}
+                  onDrop={(event: DragEvent) => { event.preventDefault(); setDragging(false); void addFiles(event.dataTransfer.files); }}
                 >
                   <span className="upload-icon">＋</span>
-                  <b>点击上传或拖入图片</b>
+                  <b>{optimizing ? "正在压缩图片…" : "点击上传或拖入图片"}</b>
                   <small>{selectedTool.accept}</small>
                 </button>
                 <input
@@ -289,7 +363,7 @@ export default function Home() {
                   accept="image/png,image/jpeg,image/webp"
                   multiple
                   hidden
-                  onChange={(event: ChangeEvent<HTMLInputElement>) => addFiles(event.target.files)}
+                  onChange={(event: ChangeEvent<HTMLInputElement>) => { void addFiles(event.target.files); event.target.value = ""; }}
                 />
                 {previews.length > 0 && (
                   <div className="preview-strip">
@@ -310,7 +384,7 @@ export default function Home() {
                   placeholder={exampleByTool[selectedTool.key]}
                   rows={5}
                 />
-                <button className="analyze-button" disabled={loading || (!files.length && !note.trim())} onClick={analyze}>
+                <button className="analyze-button" disabled={loading || optimizing || (!files.length && !note.trim())} onClick={analyze}>
                   {loading ? <><i /> 正在整理风险点…</> : <>{active === "menu" ? "免费检测菜单" : "开始分析"} <span>→</span></>}
                 </button>
                 {error && <p className="analysis-error" role="alert">{error}</p>}
