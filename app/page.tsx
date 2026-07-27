@@ -4,11 +4,16 @@ import { ChangeEvent, DragEvent, useMemo, useRef, useState } from "react";
 
 type ToolKey = "menu" | "complaint" | "regulator" | "copy";
 type Risk = {
-  level: "high" | "medium" | "low";
-  item: string;
+  title: string;
+  originalText: string;
+  riskLevel: "high" | "medium" | "low";
+  riskCategory: string;
   reason: string;
-  suggestion: string;
-  legalReference: string;
+  complaintScenario: string;
+  legalBasis: string;
+  suggestions: string[];
+  replacementCopy: string;
+  evidenceNeeded: string[];
 };
 type Analysis = {
   score: number;
@@ -96,13 +101,13 @@ export default function Home() {
     const allowed = new Set(["image/png", "image/jpeg", "image/webp"]);
     const incoming = Array.from(list);
     const invalid = incoming.find((file) => !allowed.has(file.type));
-    const oversized = incoming.find((file) => file.size > 8 * 1024 * 1024);
+    const oversized = incoming.find((file) => file.size > 7 * 1024 * 1024);
     if (invalid) {
       setError("仅支持 JPG、PNG、WebP 格式的菜单图片。");
       return;
     }
     if (oversized) {
-      setError(`图片“${oversized.name}”超过 8MB，请压缩后再上传。`);
+      setError(`图片“${oversized.name}”超过 7MB，请压缩后再上传。`);
       return;
     }
     const next = incoming.slice(0, 6);
@@ -357,9 +362,9 @@ function ResultView({ result, title, onAgain }: { result: Analysis; title: strin
   const [copied, setCopied] = useState<number | "all" | null>(null);
   const levelLabel = { high: "高风险", medium: "中风险", low: "低风险" } as const;
   const counts = {
-    high: result.risks.filter((risk) => risk.level === "high").length,
-    medium: result.risks.filter((risk) => risk.level === "medium").length,
-    low: result.risks.filter((risk) => risk.level === "low").length,
+    high: result.risks.filter((risk) => risk.riskLevel === "high").length,
+    medium: result.risks.filter((risk) => risk.riskLevel === "medium").length,
+    low: result.risks.filter((risk) => risk.riskLevel === "low").length,
   };
   const estimatedMinutes = Math.max(4, result.risks.length * 3);
 
@@ -370,10 +375,10 @@ function ResultView({ result, title, onAgain }: { result: Analysis; title: strin
   }
 
   const allSuggestions = result.risks
-    .map((risk, index) => `${index + 1}. ${risk.item}\n整改建议：${risk.suggestion}`)
+    .map((risk, index) => `${index + 1}. ${risk.originalText}\n推荐替换：${risk.replacementCopy}`)
     .join("\n\n");
   const nextSteps = result.risks.length
-    ? result.risks.map((risk) => risk.suggestion)
+    ? result.risks.map((risk) => risk.suggestions[0])
     : ["保存本次检测报告", "上线前再次核对菜单与实际原料", "新增菜品后重新检测"];
 
   return (
@@ -399,17 +404,30 @@ function ResultView({ result, title, onAgain }: { result: Analysis; title: strin
           <h3 className="result-title">具体问题与整改建议 <span>{result.risks.length}</span></h3>
           <div className="risk-list">
             {result.risks.map((risk, index) => (
-              <article className="risk-card" key={`${risk.item}-${index}`}>
+              <article className="risk-card" key={`${risk.originalText}-${index}`}>
                 <div className="risk-card-head">
-                  <span className={`risk-badge risk-${risk.level}`}>{levelLabel[risk.level]}</span>
+                  <span className={`risk-badge risk-${risk.riskLevel}`}>★★★★★ {levelLabel[risk.riskLevel]}</span>
                   <small>问题 {String(index + 1).padStart(2, "0")}</small>
                 </div>
-                <h4>{risk.item}</h4>
-                <p>{risk.reason}</p>
-                <div className="legal-basis"><b>法规 / 判断依据</b><span>{risk.legalReference}</span></div>
+                <h4>{risk.title}</h4>
+                <div className="risk-meta">
+                  <span><b>原始表述</b>{risk.originalText}</span>
+                  <span><b>风险类型</b>{risk.riskCategory}</span>
+                </div>
+                <div className="risk-detail"><b>风险原因</b><p>{risk.reason}</p></div>
+                <div className="risk-detail"><b>可能遇到</b><p>{risk.complaintScenario}</p></div>
+                <div className="legal-basis"><b>法律依据</b><span>{risk.legalBasis}</span></div>
+                <div className="risk-detail">
+                  <b>建议修改</b>
+                  <ul>{risk.suggestions.map((suggestion) => <li key={suggestion}>{suggestion}</li>)}</ul>
+                </div>
+                <div className="risk-detail evidence-list">
+                  <b>建议准备的证明材料</b>
+                  <ul>{risk.evidenceNeeded.map((evidence) => <li key={evidence}>{evidence}</li>)}</ul>
+                </div>
                 <div className="suggestion">
-                  <div><b>建议处理</b><span>{risk.suggestion}</span></div>
-                  <button onClick={() => copySuggestion(risk.suggestion, index)}>{copied === index ? "✓ 已复制" : "复制整改文案"}</button>
+                  <div><b>推荐替换文案</b><span>{risk.replacementCopy}</span></div>
+                  <button onClick={() => copySuggestion(risk.replacementCopy, index)}>{copied === index ? "✓ 已复制" : "一键复制替换文案"}</button>
                 </div>
               </article>
             ))}
