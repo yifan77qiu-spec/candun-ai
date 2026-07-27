@@ -1,19 +1,56 @@
 import { NextRequest, NextResponse } from "next/server";
+import sharp from "sharp";
 import { getAIProvider } from "@/lib/ai/provider";
 import { AIProviderError, type MenuImage } from "@/lib/ai/types";
 
 export const runtime = "nodejs";
+export const maxDuration = 180;
 
 const MAX_FILES = 6;
 const MAX_FILE_BYTES = 7 * 1024 * 1024;
 const MAX_TOTAL_BYTES = 24 * 1024 * 1024;
+const TARGET_IMAGE_BYTES = 2 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 function apiError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
 }
 
+async function compressMenuImage(image: File): Promise<MenuImage> {
+  const original = Buffer.from(await image.arrayBuffer());
+  let output = await sharp(original)
+    .rotate()
+    .resize({ width: 2000, height: 2000, fit: "inside", withoutEnlargement: true })
+    .jpeg({ quality: 82, mozjpeg: true })
+    .toBuffer();
+
+  if (output.byteLength > TARGET_IMAGE_BYTES) {
+    output = await sharp(original)
+      .rotate()
+      .resize({ width: 1600, height: 1600, fit: "inside", withoutEnlargement: true })
+      .jpeg({ quality: 70, mozjpeg: true })
+      .toBuffer();
+  }
+  if (output.byteLength > TARGET_IMAGE_BYTES) {
+    throw new Error(`图片“${image.name}”压缩后仍超过 2MB`);
+  }
+
+  return {
+    name: image.name,
+    bytes: output.byteLength,
+    originalBytes: image.size,
+    dataUrl: `data:image/jpeg;base64,${output.toString("base64")}`,
+  };
+}
+
 export async function POST(request: NextRequest) {
+  const requestId = crypto.randomUUID();
+  const requestStartedAt = Date.now();
+  console.info("[menu-analysis] request-start", {
+    requestId,
+    startedAt: new Date(requestStartedAt).toISOString(),
+  });
+
   let form: FormData;
   try {
     form = await request.formData();
@@ -49,14 +86,22 @@ export async function POST(request: NextRequest) {
     return apiError("全部图片合计不能超过 24MB，请减少图片或压缩后重试。", 413);
   }
 
-  const menuImages: MenuImage[] = await Promise.all(
-    images.map(async (image) => ({
-      name: image.name,
-      dataUrl: `data:${image.type};base64,${Buffer.from(await image.arrayBuffer()).toString("base64")}`,
-    })),
-  );
-
   try {
+    const compressionStartedAt = Date.now();
+    const menuImages: MenuImage[] = [];
+    for (const image of images) {
+      menuImages.push(await compressMenuImage(image));
+    }
+    console.info("[menu-analysis] images-ready", {
+      requestId,
+      compressionMs: Date.now() - compressionStartedAt,
+      images: menuImages.map(({ name, originalBytes, bytes }) => ({
+        name,
+        originalBytes,
+        compressedBytes: bytes,
+      })),
+    });
+
     const provider = getAIProvider();
     const analysis = await provider.analyzeMenuImages({ images: menuImages, note });
     if (analysis.report.summary.startsWith("无法识别菜单文字")) {
@@ -68,8 +113,12 @@ export async function POST(request: NextRequest) {
       model: analysis.model,
     });
   } catch (error) {
+    console.error("[menu-analysis] request-failed", {
+      requestId,
+      durationMs: Date.now() - requestStartedAt,
+      reason: error instanceof Error ? error.message : String(error),
+    });
     if (error instanceof AIProviderError) {
-      console.error("AI provider error", error.code, error.status, error.message);
       if (error.code === "config_missing") {
         return apiError("AI 服务尚未完成配置，请联系管理员。", 503);
       }
@@ -79,6 +128,9 @@ export async function POST(request: NextRequest) {
       if (error.code === "invalid_response") {
         return apiError("AI 报告格式异常，请重新检测。", 502);
       }
+    }
+    if (error instanceof Error && error.message.includes("压缩后仍超过 2MB")) {
+      return apiError(`${error.message}，请裁剪后重新上传。`, 413);
     }
     return apiError("AI 检测暂时不可用，请稍后重试。", 502);
   }
