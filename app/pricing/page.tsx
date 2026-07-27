@@ -8,13 +8,13 @@ export const metadata: Metadata = {
   description: "帮助餐饮老板提前发现菜单、外卖文案和宣传内容中的潜在投诉风险。",
 };
 
-const deliverables = [
-  "菜单风险扫描",
-  "外卖商品描述检测",
-  "宣传词风险检测",
-  "高风险表达提醒",
-  "整改建议生成",
-  "替换文案推荐",
+const fullReportItems = [
+  "全部风险项与风险等级",
+  "可能遇到的投诉场景",
+  "相关法规依据",
+  "逐项整改建议",
+  "可直接使用的替换文案",
+  "建议准备的证明材料",
 ];
 
 const riskWords = ["最好吃", "第一", "0添加", "百年老字号", "纯手工", "祖传秘方"];
@@ -29,44 +29,47 @@ export default function PricingPage() {
           <span>餐</span>
           <b>餐盾</b>
         </Link>
-        <Link className={styles.headerLink} href={riskCheckProduct.checkoutHref}>立即检测</Link>
+        <Link className={styles.headerLink} href={riskCheckProduct.detectionHref}>免费检测</Link>
       </header>
 
       <section className={styles.hero}>
         <div className={styles.heroCopy}>
-          <p className={styles.eyebrow}>餐盾AI · 餐饮风险体检</p>
-          <h1>你的菜单，<br /><em>可能藏着投诉风险。</em></h1>
+          <p className={styles.eyebrow}>首次免费检测 · 完整报告按次解锁</p>
+          <h1>免费发现风险，<br /><em>再决定是否整改。</em></h1>
           <p className={styles.subtitle}>
-            上传菜单，AI帮你提前发现高风险表达，<br />
-            避免因为一句宣传语造成不必要损失。
+            免费完成 1 次菜单风险检测，查看风险评分、风险数量和部分风险案例。<br />
+            发现问题后，18.8 元获取完整整改方案。
           </p>
-          <Link className={styles.primaryButton} href={riskCheckProduct.checkoutHref}>
-            立即检测 <span>→</span>
+          <Link className={styles.primaryButton} href={riskCheckProduct.detectionHref}>
+            免费检测菜单 <span>→</span>
           </Link>
-          <small>无需注册 · 上传后约3分钟生成报告</small>
+          <small>无需注册 · 首次免费体验 · 约3分钟出结果</small>
         </div>
 
-        <aside className={styles.priceCard}>
+        <aside className={styles.priceCard} id="unlock">
           <div className={styles.cardHead}>
-            <span>首批体验价</span>
+            <span>完整报告解锁价</span>
             <i>限前100家</i>
           </div>
           <div className={styles.price}>
             <sup>¥</sup><strong>18.8</strong>
             <del>原价 ¥99/次</del>
           </div>
-          <p>一次检测，获得一份可以直接整改的餐饮风险合规报告。</p>
+          <p>先免费发现风险。确认有需要后，再解锁全部风险详情与可执行整改方案。</p>
           <ul>
-            {deliverables.map((item) => <li key={item}>✓ <span>{item}</span></li>)}
+            {fullReportItems.map((item) => <li key={item}>✓ <span>{item}</span></li>)}
           </ul>
           <Link
             className={styles.buyButton}
-            href={riskCheckProduct.checkoutHref}
+            href={riskCheckProduct.detectionHref}
             data-product-id={riskCheckProduct.id}
             data-payment-provider={riskCheckProduct.paymentProvider}
+            data-membership-provider={riskCheckProduct.membershipProvider}
+            data-entitlement={riskCheckProduct.entitlements.paid}
           >
-            立即体验 ¥18.8
+            先免费检测
           </Link>
+          <small className={styles.unlockNote}>检测完成后，可选择 ¥18.8 解锁完整报告</small>
           <div className={styles.progressText}>
             <span>首批体验用户</span>
             <b>{riskCheckProduct.sold}/{riskCheckProduct.quota}</b>
@@ -75,6 +78,35 @@ export default function PricingPage() {
             <span style={{ width: `${progress}%` }} />
           </div>
         </aside>
+      </section>
+
+      <section className={styles.access}>
+        <div className={styles.sectionHead}>
+          <p>先体验，再付费</p>
+          <h2>免费知道有没有问题，<br />付费拿到怎么解决。</h2>
+        </div>
+        <div className={styles.accessGrid}>
+          <article>
+            <span>免费体验</span>
+            <h3>1 次菜单风险检测</h3>
+            <ul>
+              <li>风险评分</li>
+              <li>高 / 中 / 低风险数量</li>
+              <li>部分风险案例展示</li>
+            </ul>
+            <Link href={riskCheckProduct.detectionHref}>免费检测菜单 →</Link>
+          </article>
+          <article className={styles.paidAccess}>
+            <span>¥18.8 解锁</span>
+            <h3>完整餐盾风险合规报告</h3>
+            <ul>
+              <li>全部风险项、等级与投诉场景</li>
+              <li>法规依据、整改建议和替换文案</li>
+              <li>每项风险所需的证明材料建议</li>
+            </ul>
+            <Link href={riskCheckProduct.detectionHref}>先免费发现风险 →</Link>
+          </article>
+        </div>
       </section>
 
       <section className={styles.why}>
@@ -96,26 +128,28 @@ export default function PricingPage() {
 
       <section className={styles.process}>
         <p>从发现问题到完成整改</p>
-        <h2>不是泛泛提醒，而是给你下一步。</h2>
+        <h2>先看风险，再决定要不要解锁方案。</h2>
         <div>
-          <article><b>01</b><h3>上传内容</h3><span>菜单截图、外卖商品描述或宣传文案</span></article>
-          <article><b>02</b><h3>识别风险</h3><span>标出风险等级、可能场景与核验依据</span></article>
-          <article><b>03</b><h3>直接整改</h3><span>获得修改建议与可复制的替换文案</span></article>
+          <article><b>01</b><h3>免费上传</h3><span>完成首次菜单检测，无需注册或付费</span></article>
+          <article><b>02</b><h3>查看概览</h3><span>免费查看风险评分、数量与部分风险案例</span></article>
+          <article><b>03</b><h3>解锁整改</h3><span>需要时支付 18.8 元，获得完整整改报告</span></article>
         </div>
       </section>
 
       <section className={styles.finalCta}>
         <div>
-          <p>首批体验名额 0/100</p>
-          <h2>先检查，再上线。</h2>
-          <span>花几分钟检查菜单，少留一个可能被投诉的表达。</span>
+          <p>首次菜单检测免费</p>
+          <h2>免费发现风险，18.8 元获取完整整改方案。</h2>
+          <span>先看自己的菜单是否有问题，再决定要不要解锁完整报告。</span>
         </div>
         <Link
-          href={riskCheckProduct.checkoutHref}
+          href={riskCheckProduct.detectionHref}
           data-product-id={riskCheckProduct.id}
           data-payment-provider={riskCheckProduct.paymentProvider}
+          data-membership-provider={riskCheckProduct.membershipProvider}
+          data-entitlement={riskCheckProduct.entitlements.free}
         >
-          立即体验 ¥18.8 <b>→</b>
+          免费检测菜单 <b>→</b>
         </Link>
       </section>
 
@@ -126,4 +160,3 @@ export default function PricingPage() {
     </main>
   );
 }
-
