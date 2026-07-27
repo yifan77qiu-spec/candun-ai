@@ -1,6 +1,7 @@
 "use client";
 
 import { ChangeEvent, DragEvent, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 
 type ToolKey = "menu" | "complaint" | "regulator" | "copy";
 type Risk = {
@@ -359,27 +360,13 @@ export default function Home() {
 
 function ResultView({ result, title, onAgain }: { result: Analysis; title: string; onAgain: () => void }) {
   const tone = result.score >= 80 ? "safe" : result.score >= 60 ? "medium" : "high";
-  const [copied, setCopied] = useState<number | "all" | null>(null);
   const levelLabel = { high: "高风险", medium: "中风险", low: "低风险" } as const;
   const counts = {
     high: result.risks.filter((risk) => risk.riskLevel === "high").length,
     medium: result.risks.filter((risk) => risk.riskLevel === "medium").length,
     low: result.risks.filter((risk) => risk.riskLevel === "low").length,
   };
-  const estimatedMinutes = Math.max(4, result.risks.length * 3);
-
-  async function copySuggestion(text: string, key: number | "all") {
-    await navigator.clipboard.writeText(text);
-    setCopied(key);
-    window.setTimeout(() => setCopied(null), 1600);
-  }
-
-  const allSuggestions = result.risks
-    .map((risk, index) => `${index + 1}. ${risk.originalText}\n推荐替换：${risk.replacementCopy}`)
-    .join("\n\n");
-  const nextSteps = result.risks.length
-    ? result.risks.map((risk) => risk.suggestions[0])
-    : ["保存本次检测报告", "上线前再次核对菜单与实际原料", "新增菜品后重新检测"];
+  const previewRisk = result.risks[0];
 
   return (
     <div className="result-view">
@@ -397,50 +384,56 @@ function ResultView({ result, title, onAgain }: { result: Analysis; title: strin
         <div className="report-stat stat-high"><span>高风险</span><strong>{counts.high}</strong><small>建议立即处理</small></div>
         <div className="report-stat stat-medium"><span>中风险</span><strong>{counts.medium}</strong><small>建议本周处理</small></div>
         <div className="report-stat stat-low"><span>低风险</span><strong>{counts.low}</strong><small>建议顺手优化</small></div>
-        <div className="report-stat stat-time"><span>预计整改时间</span><strong>{estimatedMinutes} 分钟</strong><small>按建议逐项修改</small></div>
+        <div className="report-stat stat-time"><span>风险总数</span><strong>{result.risks.length} 项</strong><small>完整报告可逐项查看</small></div>
       </div>
-      <div className="result-columns">
+      <div className="free-result-note">
+        <span>免费结果</span>
+        <p>你正在查看风险概览和部分风险案例。完整整改方案尚未解锁。</p>
+      </div>
+      <div className="result-columns gated-result">
         <div>
-          <h3 className="result-title">具体问题与整改建议 <span>{result.risks.length}</span></h3>
-          <div className="risk-list">
-            {result.risks.map((risk, index) => (
-              <article className="risk-card" key={`${risk.originalText}-${index}`}>
-                <div className="risk-card-head">
-                  <span className={`risk-badge risk-${risk.riskLevel}`}>★★★★★ {levelLabel[risk.riskLevel]}</span>
-                  <small>问题 {String(index + 1).padStart(2, "0")}</small>
-                </div>
-                <h4>{risk.title}</h4>
-                <div className="risk-meta">
-                  <span><b>原始表述</b>{risk.originalText}</span>
-                  <span><b>风险类型</b>{risk.riskCategory}</span>
-                </div>
-                <div className="risk-detail"><b>风险原因</b><p>{risk.reason}</p></div>
-                <div className="risk-detail"><b>可能遇到</b><p>{risk.complaintScenario}</p></div>
-                <div className="legal-basis"><b>法律依据</b><span>{risk.legalBasis}</span></div>
-                <div className="risk-detail">
-                  <b>建议修改</b>
-                  <ul>{risk.suggestions.map((suggestion) => <li key={suggestion}>{suggestion}</li>)}</ul>
-                </div>
-                <div className="risk-detail evidence-list">
-                  <b>建议准备的证明材料</b>
-                  <ul>{risk.evidenceNeeded.map((evidence) => <li key={evidence}>{evidence}</li>)}</ul>
-                </div>
-                <div className="suggestion">
-                  <div><b>推荐替换文案</b><span>{risk.replacementCopy}</span></div>
-                  <button onClick={() => copySuggestion(risk.replacementCopy, index)}>{copied === index ? "✓ 已复制" : "一键复制替换文案"}</button>
-                </div>
-              </article>
-            ))}
-          </div>
+          <h3 className="result-title">风险案例预览 <span>{Math.min(1, result.risks.length)}</span></h3>
+          {previewRisk ? (
+            <article className="risk-card preview-risk-card">
+              <div className="risk-card-head">
+                <span className={`risk-badge risk-${previewRisk.riskLevel}`}>★★★★★ {levelLabel[previewRisk.riskLevel]}</span>
+                <small>部分案例</small>
+              </div>
+              <h4>{previewRisk.title}</h4>
+              <div className="risk-meta">
+                <span><b>原始表述</b>{previewRisk.originalText}</span>
+                <span><b>风险类型</b>{previewRisk.riskCategory}</span>
+              </div>
+              <div className="risk-detail"><b>风险原因</b><p>{previewRisk.reason}</p></div>
+            </article>
+          ) : (
+            <article className="risk-card preview-risk-card">
+              <h4>本次未识别到明显高频风险表达</h4>
+              <p>免费检测结果仅供风险识别参考，上线前仍建议人工核对菜单内容与实际商品是否一致。</p>
+            </article>
+          )}
         </div>
-        <aside className="next-steps">
-          <span className="step-label">行动清单</span>
-          <h3>接下来这样做</h3>
-          {nextSteps.map((step, index) => (
-            <label key={step}><input type="checkbox" /><span><b>{index + 1}</b>{step}</span></label>
-          ))}
-          <button className="copy-all-button" onClick={() => copySuggestion(allSuggestions, "all")}>{copied === "all" ? "✓ 已复制全部整改文案" : "一键复制全部整改文案"}</button>
-          <button onClick={() => window.print()}>保存 / 打印报告</button>
+        <aside className="unlock-report">
+          <span className="step-label">完整餐盾风险合规报告</span>
+          <h3>¥18.8 解锁完整整改方案</h3>
+          <p>一次解锁本次检测的全部风险与整改内容。</p>
+          <ul>
+            <li>全部风险项与风险等级</li>
+            <li>投诉场景与法规依据</li>
+            <li>逐项整改建议</li>
+            <li>可复制的替换文案</li>
+            <li>证明材料建议</li>
+          </ul>
+          <Link
+            href="/pricing#unlock"
+            data-product-id="candun-risk-check-v1"
+            data-payment-provider="reserved-wechat-pay"
+            data-membership-provider="reserved-membership"
+            data-entitlement="full-compliance-report"
+          >
+            ¥18.8 解锁完整报告
+          </Link>
+          <small>支付功能即将开放，当前已预留解锁接口</small>
           <button className="again-button" onClick={onAgain}>重新分析</button>
         </aside>
       </div>
