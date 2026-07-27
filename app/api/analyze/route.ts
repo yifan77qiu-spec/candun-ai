@@ -4,12 +4,15 @@ import { getAIProvider } from "@/lib/ai/provider";
 import { AIProviderError, type MenuImage } from "@/lib/ai/types";
 
 export const runtime = "nodejs";
-export const maxDuration = 180;
+export const maxDuration = 70;
 
-const MAX_FILES = 6;
-const MAX_FILE_BYTES = 7 * 1024 * 1024;
-const MAX_TOTAL_BYTES = 24 * 1024 * 1024;
-const TARGET_IMAGE_BYTES = 2 * 1024 * 1024;
+const FILE_LIMITS = {
+  free: { maxFiles: 2, maxTotalBytes: 4 * 1024 * 1024 },
+  paid: { maxFiles: 6, maxTotalBytes: 12 * 1024 * 1024 },
+} as const;
+const ACTIVE_DETECTION_TIER: keyof typeof FILE_LIMITS = "free";
+const MAX_FILE_BYTES = 2 * 1024 * 1024;
+const TARGET_IMAGE_BYTES = 1.2 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 function apiError(message: string, status: number) {
@@ -20,19 +23,19 @@ async function compressMenuImage(image: File): Promise<MenuImage> {
   const original = Buffer.from(await image.arrayBuffer());
   let output = await sharp(original)
     .rotate()
-    .resize({ width: 2000, height: 2000, fit: "inside", withoutEnlargement: true })
-    .jpeg({ quality: 82, mozjpeg: true })
+    .resize({ width: 1800, height: 1800, fit: "inside", withoutEnlargement: true })
+    .jpeg({ quality: 80, mozjpeg: true })
     .toBuffer();
 
   if (output.byteLength > TARGET_IMAGE_BYTES) {
     output = await sharp(original)
       .rotate()
-      .resize({ width: 1600, height: 1600, fit: "inside", withoutEnlargement: true })
-      .jpeg({ quality: 70, mozjpeg: true })
+      .resize({ width: 1500, height: 1500, fit: "inside", withoutEnlargement: true })
+      .jpeg({ quality: 66, mozjpeg: true })
       .toBuffer();
   }
   if (output.byteLength > TARGET_IMAGE_BYTES) {
-    throw new Error(`图片“${image.name}”压缩后仍超过 2MB`);
+    throw new Error(`图片“${image.name}”压缩后仍超过 1.2MB`);
   }
 
   return {
@@ -61,6 +64,14 @@ export async function POST(request: NextRequest) {
   const type = form.get("type");
   const note = String(form.get("note") ?? "").trim();
   const images = form.getAll("images").filter((entry): entry is File => entry instanceof File);
+  const limits = FILE_LIMITS[ACTIVE_DETECTION_TIER];
+  const receivedBytes = images.reduce((sum, image) => sum + image.size, 0);
+  console.info("[menu-analysis] server-request-received", {
+    requestId,
+    imageCount: images.length,
+    receivedBytes,
+    hasNote: Boolean(note),
+  });
 
   if (type !== "menu") {
     return apiError("当前真实 AI 检测阶段仅开放菜单体检。", 400);
@@ -68,8 +79,8 @@ export async function POST(request: NextRequest) {
   if (!images.length && !note) {
     return apiError("请上传菜单图片，或粘贴菜单文字后再检测。", 400);
   }
-  if (images.length > MAX_FILES) {
-    return apiError(`一次最多上传 ${MAX_FILES} 张菜单图片。`, 400);
+  if (images.length > limits.maxFiles) {
+    return apiError(`免费检测最多上传 ${limits.maxFiles} 张菜单图片。`, 400);
   }
 
   let totalBytes = 0;
@@ -82,8 +93,8 @@ export async function POST(request: NextRequest) {
       return apiError(`图片“${image.name}”过大，请压缩至 7MB 以内后重试。`, 413);
     }
   }
-  if (totalBytes > MAX_TOTAL_BYTES) {
-    return apiError("全部图片合计不能超过 24MB，请减少图片或压缩后重试。", 413);
+  if (totalBytes > limits.maxTotalBytes) {
+    return apiError("全部图片合计不能超过 4MB，请减少图片或压缩后重试。", 413);
   }
 
   try {
@@ -103,7 +114,20 @@ export async function POST(request: NextRequest) {
     });
 
     const provider = getAIProvider();
+    const aiStartedAt = Date.now();
+    console.info("[menu-analysis] ai-call-start", {
+      requestId,
+      provider: provider.name,
+      imageCount: menuImages.length,
+    });
     const analysis = await provider.analyzeMenuImages({ images: menuImages, note });
+    console.info("[menu-analysis] ai-call-complete", {
+      requestId,
+      provider: analysis.provider,
+      model: analysis.model,
+      aiResponseMs: Date.now() - aiStartedAt,
+      totalDurationMs: Date.now() - requestStartedAt,
+    });
     if (analysis.report.summary.startsWith("无法识别菜单文字")) {
       return apiError("图片中无法识别出菜单文字，请上传清晰、正向、光线充足的图片。", 422);
     }
@@ -129,7 +153,7 @@ export async function POST(request: NextRequest) {
         return apiError("AI 报告格式异常，请重新检测。", 502);
       }
     }
-    if (error instanceof Error && error.message.includes("压缩后仍超过 2MB")) {
+    if (error instanceof Error && error.message.includes("压缩后仍超过 1.2MB")) {
       return apiError(`${error.message}，请裁剪后重新上传。`, 413);
     }
     return apiError("AI 检测暂时不可用，请稍后重试。", 502);
