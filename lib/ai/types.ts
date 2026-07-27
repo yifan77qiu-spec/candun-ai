@@ -15,8 +15,10 @@ export type MenuRiskReport = {
 };
 
 export type MenuImage = {
+  bytes: number;
   dataUrl: string;
   name: string;
+  originalBytes: number;
 };
 
 export type AnalyzeMenuInput = {
