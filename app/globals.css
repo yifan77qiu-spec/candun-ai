@@ -324,3 +324,156 @@ footer p:last-child { text-align: right; }
   .result-columns { grid-template-columns: 1fr; }
   .next-steps { break-inside: avoid; }
 }
+
+/* 餐厅经营风险体检平台 */
+.brand-button { border: 0; background: transparent; cursor: pointer; color: inherit; }
+.restaurant-hero { min-height: 690px; align-items: center; }
+.restaurant-hero .hero-copy > p { max-width: 610px; }
+.restaurant-preview { transform: rotate(1deg); }
+.module-preview-list { display: grid; margin-top: 18px; }
+.module-preview-list > div { display: grid; grid-template-columns: 9px 1fr auto auto; align-items: center; gap: 10px; padding: 13px 0; border-bottom: 1px solid var(--line); }
+.module-preview-list strong { font-size: 11px; }
+.module-preview-list small { color: var(--muted); font-size: 9px; }
+.module-preview-list em { color: #89938e; background: #edf0ec; border-radius: 99px; padding: 4px 8px; font-size: 9px; font-style: normal; }
+.module-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+.preview-footer { margin-top: 15px; padding: 10px; text-align: center; background: var(--mint); color: var(--green); font-size: 10px; font-weight: 800; }
+.preview-footer span { color: var(--orange); margin: 0 6px; }
+.platform-trust { margin-bottom: 105px; }
+
+.module-section { max-width: 1180px; margin: 0 auto; padding: 0 30px 110px; text-align: center; }
+.module-section .content-heading { margin-left: auto; margin-right: auto; }
+.risk-module-grid { display: grid; grid-template-columns: repeat(4, 1fr); text-align: left; border: 1px solid rgba(23,33,29,.13); background: var(--paper); }
+.risk-module-grid article { min-height: 220px; padding: 24px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.risk-module-grid article:nth-child(4n) { border-right: 0; }
+.risk-module-grid article:nth-last-child(-n+3) { border-bottom: 0; }
+.risk-module-grid article > div { display: flex; justify-content: space-between; align-items: center; }
+.risk-module-grid article > div > b { color: var(--orange); font: 12px Georgia, serif; }
+.risk-module-grid h3 { margin: 47px 0 10px; font: 500 22px Georgia,"Songti SC",serif; }
+.risk-module-grid p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.7; }
+.method-tag { display: inline-flex; align-items: center; width: fit-content; border-radius: 999px; padding: 5px 9px; font-size: 9px; font-weight: 800; white-space: nowrap; }
+.method-tag.deep { color: #14533f; background: #dcece1; }
+.method-tag.basic { color: #8b5c13; background: #f6ead0; }
+.method-tag.manual { color: #68736d; background: #e9ece9; }
+
+.model-section { max-width: 1120px; margin: 0 auto 110px; display: grid; grid-template-columns: 1fr 1fr; border: 1px solid rgba(23,33,29,.13); background: var(--paper); }
+.model-section > div { padding: 42px; }
+.model-section > div + div { background: var(--green); color: white; }
+.model-section p { color: var(--orange); text-transform: uppercase; letter-spacing: .12em; font-size: 10px; font-weight: 800; }
+.model-section h2 { margin: 12px 0 24px; font: 500 31px Georgia,"Songti SC",serif; }
+.model-section ul { list-style: none; padding: 0; margin: 0; }
+.model-section li { padding: 12px 0; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; }
+.model-section > div + div li { border-color: rgba(255,255,255,.16); color: rgba(255,255,255,.72); }
+.model-section li::before { content: "✓"; margin-right: 9px; color: var(--orange); font-weight: 800; }
+.model-section a { display: inline-block; margin-top: 25px; padding: 13px 17px; background: #f6f1e7; color: var(--green); text-decoration: none; font-size: 12px; font-weight: 800; border-radius: 4px; }
+
+.questionnaire { max-width: 920px; margin: 0 auto; padding: 30px 30px 100px; }
+.questionnaire-head { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding-bottom: 25px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 11px; }
+.questionnaire-head button { justify-self: start; border: 0; background: transparent; color: var(--green); cursor: pointer; padding: 0; }
+.questionnaire-head em { justify-self: end; font-style: normal; color: var(--orange); }
+.questionnaire-intro { padding: 70px 0 40px; max-width: 700px; }
+.questionnaire-intro p { color: var(--orange); font-size: 11px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
+.questionnaire-intro h1 { margin: 8px 0 14px; font: 500 52px Georgia,"Songti SC",serif; letter-spacing: -.04em; }
+.questionnaire-intro span { color: var(--muted); line-height: 1.8; font-size: 14px; }
+.check-form { display: grid; gap: 14px; }
+.question { border: 1px solid rgba(23,33,29,.13); border-radius: 6px; background: var(--paper); padding: 24px; margin: 0; }
+.question legend { width: 100%; display: grid; grid-template-columns: 35px 1fr auto; align-items: start; gap: 10px; padding: 0; margin: 0 0 18px; }
+.question legend > b { color: var(--orange); font: 12px Georgia,serif; }
+.question legend span { display: grid; }
+.question legend strong { font: 500 18px Georgia,"Songti SC",serif; }
+.question legend small { margin-top: 5px; color: var(--muted); font-size: 10px; line-height: 1.5; }
+.question legend em { color: var(--muted); font-size: 9px; font-style: normal; }
+.question > input { width: 100%; min-height: 50px; border: 1px solid #cdd3ce; background: white; border-radius: 4px; padding: 0 14px; outline: 0; }
+.question > input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(22,79,62,.1); }
+.choice-grid { display: flex; flex-wrap: wrap; gap: 9px; }
+.choice-grid label { position: relative; cursor: pointer; }
+.choice-grid input { position: absolute; opacity: 0; pointer-events: none; }
+.choice-grid label span { min-height: 42px; display: flex; align-items: center; padding: 0 15px; border: 1px solid #ccd3ce; border-radius: 4px; color: #5d6862; font-size: 12px; background: white; transition: .2s; }
+.choice-grid label:hover span { border-color: var(--green); }
+.choice-grid label.selected span { border-color: var(--green); background: var(--green); color: white; box-shadow: 0 7px 18px rgba(22,79,62,.13); }
+.menu-upload-block { background: var(--green); color: white; padding: 28px; border-radius: 7px; }
+.upload-method { display: flex; gap: 12px; align-items: center; margin-bottom: 18px; }
+.upload-method p { margin: 0; color: rgba(255,255,255,.68); font-size: 11px; line-height: 1.6; }
+.menu-upload-block .dropzone { background: #f9f7f0; color: var(--ink); }
+.menu-upload-block > label { display: block; margin: 18px 0 9px; font-size: 11px; font-weight: 800; }
+.menu-upload-block textarea { margin-bottom: 0; }
+.submit-check { width: 100%; min-height: 58px; border: 0; border-radius: 4px; background: var(--orange); color: white; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 12px; box-shadow: 0 14px 30px rgba(185,105,48,.2); }
+.submit-check:disabled { background: #afb6b1; cursor: wait; }
+.submit-check i { width: 15px; height: 15px; border: 2px solid white; border-top-color: transparent; border-radius: 50%; animation: spin .8s linear infinite; }
+.form-note { text-align: center; color: var(--muted); font-size: 10px; }
+
+.restaurant-report { background: var(--green); color: white; padding: 30px max(30px, calc((100vw - 1180px) / 2)) 100px; }
+.report-top { display: flex; justify-content: space-between; padding-bottom: 26px; border-bottom: 1px solid rgba(255,255,255,.17); font-size: 11px; color: rgba(255,255,255,.58); }
+.report-top button { border: 0; background: transparent; color: white; cursor: pointer; padding: 0; }
+.restaurant-report-hero { display: grid; grid-template-columns: 140px 1fr; gap: 35px; align-items: center; padding: 55px 0 42px; }
+.restaurant-report-hero p { margin: 0 0 9px; color: #a9cdbd; font-size: 11px; }
+.restaurant-report-hero h1 { margin: 0 0 10px; font: 500 42px Georgia,"Songti SC",serif; }
+.restaurant-report-hero > div > span { color: rgba(255,255,255,.64); font-size: 12px; line-height: 1.7; }
+.restaurant-stats { margin-bottom: 24px; }
+.restaurant-report-layout { display: grid; grid-template-columns: 1fr 350px; gap: 25px; align-items: start; }
+.report-section-title { margin: 25px 0 14px; font: 500 19px Georgia,"Songti SC",serif; }
+.module-result-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.module-result { min-height: 150px; background: var(--paper); color: var(--ink); border-radius: 5px; padding: 18px; border-top: 3px solid #8f9993; }
+.module-result.status-high { border-top-color: #b44e34; }
+.module-result.status-medium { border-top-color: #c18a33; }
+.module-result.status-pass { border-top-color: #56836c; }
+.module-result > div { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.status-pill { display: inline-flex; border-radius: 999px; padding: 5px 8px; font-size: 9px; font-weight: 800; }
+.status-pill.high { background: #fae1d8; color: #a23c20; }
+.status-pill.medium { background: #faebc9; color: #8d5c00; }
+.status-pill.pass { background: #e2ece6; color: var(--green); }
+.status-pill.pending { background: #e9ece9; color: #67736d; }
+.module-result h3 { margin: 28px 0 8px; font: 500 20px Georgia,"Songti SC",serif; }
+.module-result p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
+.menu-example-title { margin-top: 32px; }
+.report-menu-preview { min-height: 0; }
+.report-sidebar { display: grid; gap: 14px; position: sticky; top: 18px; }
+.missing-materials { background: #e6efe8; color: var(--ink); border-radius: 6px; padding: 24px; }
+.missing-materials .step-label { color: var(--green); }
+.missing-materials h3 { margin: 12px 0 17px; font: 500 23px Georgia,"Songti SC",serif; }
+.missing-materials ul { margin: 0; padding: 0; list-style: none; }
+.missing-materials li { padding: 11px 0; border-top: 1px solid rgba(22,79,62,.14); color: #526159; font-size: 11px; line-height: 1.5; }
+.missing-materials li::before { content: "＋"; margin-right: 8px; color: var(--orange); font-weight: 800; }
+.restaurant-unlock { box-shadow: none; }
+
+@media (max-width: 900px) {
+  .risk-module-grid { grid-template-columns: repeat(2, 1fr); }
+  .risk-module-grid article:nth-child(4n) { border-right: 1px solid var(--line); }
+  .risk-module-grid article:nth-child(2n) { border-right: 0; }
+  .risk-module-grid article:nth-last-child(-n+3) { border-bottom: 1px solid var(--line); }
+  .risk-module-grid article:last-child { border-bottom: 0; }
+  .model-section { margin-left: 25px; margin-right: 25px; }
+  .restaurant-report-layout { grid-template-columns: 1fr; }
+  .report-sidebar { position: static; grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 620px) {
+  .restaurant-hero { min-height: auto; }
+  .restaurant-preview { transform: none; }
+  .module-preview-list > div { grid-template-columns: 8px 1fr auto; }
+  .module-preview-list small { grid-column: 2; }
+  .module-preview-list em { grid-column: 3; grid-row: 1 / span 2; }
+  .module-section { padding: 0 16px 75px; }
+  .risk-module-grid { grid-template-columns: 1fr; }
+  .risk-module-grid article, .risk-module-grid article:nth-child(4n), .risk-module-grid article:nth-child(2n), .risk-module-grid article:nth-last-child(-n+3) { min-height: 175px; border-right: 0; border-bottom: 1px solid var(--line); }
+  .risk-module-grid article:last-child { border-bottom: 0; }
+  .risk-module-grid h3 { margin-top: 31px; }
+  .model-section { grid-template-columns: 1fr; margin: 0 16px 75px; }
+  .model-section > div { padding: 28px 23px; }
+  .questionnaire { padding: 20px 16px 75px; }
+  .questionnaire-head { grid-template-columns: 1fr auto; }
+  .questionnaire-head > span { display: none; }
+  .questionnaire-intro { padding: 48px 0 28px; }
+  .questionnaire-intro h1 { font-size: 38px; }
+  .question { padding: 20px 17px; }
+  .question legend { grid-template-columns: 27px 1fr auto; }
+  .choice-grid { display: grid; grid-template-columns: 1fr 1fr; }
+  .choice-grid label span { justify-content: center; padding: 0 9px; text-align: center; }
+  .menu-upload-block { padding: 20px 16px; }
+  .upload-method { align-items: flex-start; flex-direction: column; }
+  .restaurant-report { padding: 22px 16px 70px; }
+  .restaurant-report-hero { grid-template-columns: 1fr; gap: 22px; padding: 42px 0 30px; }
+  .restaurant-report-hero h1 { font-size: 32px; }
+  .module-result-list { grid-template-columns: 1fr; }
+  .report-sidebar { grid-template-columns: 1fr; }
+  .module-result { min-height: 140px; }
+}

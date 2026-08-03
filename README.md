@@ -5,19 +5,30 @@ OpenAI API Key 均由服务端 Route Handler 处理。
 
 ## 环境变量
 
-复制 `.env.example` 为 `.env.local`，填写：
+复制 `.env.example` 为 `.env.local`。低成本 MVP 默认使用通义千问：
 
 ```bash
+AI_PROVIDER=qwen
+QWEN_API_KEY=你的阿里云百炼API密钥
+QWEN_MODEL=qwen3-vl-flash
+```
+
+- API Key 只能配置在本地服务端或 Vercel Project
+  Settings → Environment Variables。
+- 不要使用 `NEXT_PUBLIC_` 前缀，也不要把真实密钥提交到 Git。
+- 在 Vercel 中至少勾选 Production；建议同时勾选 Preview 和 Development。
+- 新增或修改环境变量后，需要重新部署才会生效。
+
+切换 OpenAI 时配置：
+
+```bash
+AI_PROVIDER=openai
 OPENAI_API_KEY=你的服务端API密钥
 OPENAI_MODEL=gpt-5-mini
 ```
 
-- `OPENAI_API_KEY` 必填，只能配置在本地服务端或 Vercel Project
-  Settings → Environment Variables。
-- `OPENAI_MODEL` 可选，默认使用 `gpt-5-mini`。
-- 不要使用 `NEXT_PUBLIC_` 前缀，也不要把真实密钥提交到 Git。
-- 在 Vercel 中至少勾选 Production；建议同时勾选 Preview 和 Development。
-- 新增或修改环境变量后，需要重新部署才会生效。
+业务接口只依赖统一的 `AIProvider`，不会直接依赖具体厂商。DeepSeek
+Provider 名称已预留，但当前菜单图片检测需要视觉模型，因此尚未启用。
 
 ## Vercel
 

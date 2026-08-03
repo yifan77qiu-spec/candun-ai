@@ -1,6 +1,6 @@
 export const riskCheckProduct = {
   id: "candun-risk-check-v1",
-  name: "餐盾AI｜餐饮风险体检",
+  name: "餐盾｜餐厅经营风险体检",
   freeUses: 1,
   experiencePrice: 18.8,
   regularPrice: 99,
