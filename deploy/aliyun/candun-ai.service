@@ -1,0 +1,17 @@
+[Unit]
+Description=Candun AI Next.js application
+After=network.target
+
+[Service]
+Type=simple
+User=admin
+Group=admin
+WorkingDirectory=/var/www/candun-ai
+EnvironmentFile=/etc/candun-ai.env
+Environment=NODE_ENV=production
+ExecStart=/usr/local/bin/npx next start -H 127.0.0.1 -p 3000
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
