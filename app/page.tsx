@@ -20,6 +20,8 @@ type Risk = {
 type Analysis = { score: number; summary: string; risks: Risk[] };
 type Status = "high" | "medium" | "pass" | "pending";
 type CheckMethod = "AI深度检测" | "基础问卷检查" | "待人工核验";
+type RestaurantCategory = "" | "snack" | "chinese" | "hotpot" | "beverage" | "bakery" | "seafood" | "deli" | "other";
+type CategoryAnswer = "" | "yes" | "no" | "unsure";
 type ModuleResult = {
   key: string;
   title: string;
@@ -31,6 +33,8 @@ type ModuleResult = {
 
 type Answers = {
   storeName: string;
+  category: RestaurantCategory;
+  categoryChecks: Record<string, CategoryAnswer>;
   businessType: "" | "dinein" | "delivery" | "both";
   employeeCount: string;
   laborContracts: "" | "all" | "partial" | "none" | "na";
@@ -50,6 +54,8 @@ type RestaurantReport = {
 
 const initialAnswers: Answers = {
   storeName: "",
+  category: "",
+  categoryChecks: {},
   businessType: "",
   employeeCount: "",
   laborContracts: "",
@@ -59,6 +65,75 @@ const initialAnswers: Answers = {
   recentComplaint: "",
   uploadMenu: "",
 };
+
+const categoryProfiles = {
+  snack: {
+    label: "小吃快餐",
+    questions: [
+      ["ingredientNames", "菜名是否包含需要核对真实原料的表达？", "例如蟹肉、牛肉、鲜虾、鲍鱼、手打等"],
+      ["portionClaims", "是否使用大份、超值、足量等分量描述？", "需要确保图片、克重和实际出品基本一致"],
+      ["preparedFood", "是否使用预制、复热或外购半成品？", "建议核对菜单描述与实际制作方式是否一致"],
+    ],
+  },
+  chinese: {
+    label: "中餐／正餐",
+    questions: [
+      ["signatureClaims", "是否使用招牌、正宗、祖传或秘制等表达？", "建议核验品牌、传承和制作依据"],
+      ["marketPrice", "是否存在时价、称重或另收加工费的菜品？", "价格和计价方式需要提前清晰展示"],
+      ["coldDishes", "是否制作凉菜、生食或自制饮品？", "可能需要进一步核验许可范围和操作条件"],
+    ],
+  },
+  hotpot: {
+    label: "火锅／烧烤",
+    questions: [
+      ["openFlame", "门店是否使用燃气、炭火或其他明火？", "需要进一步核验燃气、排烟和消防管理"],
+      ["rawFood", "是否由顾客接触或自行烹饪生肉、生海鲜？", "建议核验生熟分区、夹具和食用提示"],
+      ["homemadeSauce", "是否提供自制蘸料、饮品或腌制食品？", "建议核验储存、保质和过敏原提示"],
+    ],
+  },
+  beverage: {
+    label: "奶茶／咖啡／饮品",
+    questions: [
+      ["healthClaims", "是否使用0糖、减肥、养生、纯天然等表达？", "此类表达通常需要重点核验依据和适用条件"],
+      ["freshClaims", "是否使用鲜榨、现切、现煮或当天制作等表达？", "需要确保门店实际制作流程能够支持宣传"],
+      ["selfMadeIce", "是否使用自制冰块、鲜切水果或自制小料？", "建议进一步核验制冰、冷藏和保存管理"],
+    ],
+  },
+  bakery: {
+    label: "烘焙／甜品",
+    questions: [
+      ["additiveClaims", "是否使用0添加、无糖、低脂或纯手工等表达？", "建议核对配料、工艺和检测或证明材料"],
+      ["shelfLife", "是否销售短保、冷藏或当天制作产品？", "需要明确保存条件、制作日期和食用期限"],
+      ["allergens", "产品是否含坚果、乳制品、鸡蛋等常见过敏原？", "建议检查菜单和包装是否提供必要提示"],
+    ],
+  },
+  seafood: {
+    label: "海鲜／水产",
+    questions: [
+      ["speciesNames", "菜单是否明确海鲜品种和商品名称？", "俗称、图片和实际品种需要保持一致"],
+      ["weighing", "是否按斤、只、份或时价进行计价？", "建议明确单位、价格和称重确认方式"],
+      ["processingFee", "是否另收加工费、调料费或服务费？", "额外费用应在消费前清晰告知"],
+    ],
+  },
+  deli: {
+    label: "熟食／卤味",
+    questions: [
+      ["bulkFood", "是否销售散装、称重熟食？", "建议核验名称、价格、制作或分装信息"],
+      ["storage", "产品是否需要冷藏、热藏或限时食用？", "需要明确保存条件和建议食用时间"],
+      ["onsiteProduction", "菜单是否使用现卤、当天现做或纯手工等表达？", "需要确保实际制作和记录能够支持宣传"],
+    ],
+  },
+  other: {
+    label: "其他餐饮",
+    questions: [
+      ["specialClaims", "是否使用第一、正宗、老字号、非遗等特殊宣传？", "建议核验宣传依据和授权材料"],
+      ["specialProcess", "是否涉及生食、冷食、自制饮品或特殊加工？", "可能需要进一步核验许可范围和操作条件"],
+      ["extraFees", "是否存在称重、时价或额外服务费用？", "计价规则和额外费用应提前明确展示"],
+    ],
+  },
+} as const;
+
+const categoryOptions = Object.entries(categoryProfiles).map(([value, profile]) => [value, profile.label] as const);
 
 const riskModules = [
   ["menu", "菜单与宣传风险", "AI深度检测", "检查菜名、原料描述与宣传表达"],
@@ -116,7 +191,9 @@ async function compressImageForUpload(file: File) {
   }
 }
 
-function menuStatus(analysis: Analysis | null): Pick<ModuleResult, "status" | "statusLabel" | "issue"> {
+function menuStatus(analysis: Analysis | null, riskyPromotion: Answers["riskyPromotion"]): Pick<ModuleResult, "status" | "statusLabel" | "issue"> {
+  if (!analysis && riskyPromotion === "yes") return { status: "medium", statusLabel: "中风险", issue: "问卷显示正在使用高频风险宣传表达，建议上传菜单核验" };
+  if (!analysis && riskyPromotion === "unsure") return { status: "pending", statusLabel: "待补充资料", issue: "宣传表达尚不明确，建议上传菜单或外卖页面" };
   if (!analysis) return { status: "pending", statusLabel: "待补充资料", issue: "尚未上传菜单或外卖页面" };
   const high = analysis.risks.filter((risk) => risk.riskLevel === "high").length;
   const medium = analysis.risks.filter((risk) => risk.riskLevel === "medium").length;
@@ -128,7 +205,11 @@ function menuStatus(analysis: Analysis | null): Pick<ModuleResult, "status" | "s
 function buildRestaurantReport(answers: Answers, menuAnalysis: Analysis | null): RestaurantReport {
   const employeeCount = Math.max(0, Number.parseInt(answers.employeeCount || "0", 10) || 0);
   const hasDelivery = answers.businessType === "delivery" || answers.businessType === "both";
-  const menu = menuStatus(menuAnalysis);
+  const menu = menuStatus(menuAnalysis, answers.riskyPromotion);
+  const categoryProfile = answers.category ? categoryProfiles[answers.category] : null;
+  const categoryAnswers = Object.values(answers.categoryChecks);
+  const categoryNeedsReview = categoryAnswers.filter((answer) => answer === "yes" || answer === "unsure").length;
+  const categoryLabel = categoryProfile?.label || "当前品类";
   const modules: ModuleResult[] = [
     { key: "menu", title: "菜单与宣传风险", method: menuAnalysis ? "AI深度检测" : "基础问卷检查", ...menu },
     hasDelivery
@@ -144,7 +225,9 @@ function buildRestaurantReport(answers: Answers, menuAnalysis: Analysis | null):
         : answers.laborContracts === "partial" || answers.socialInsurance === "partial"
           ? { key: "labor", title: "劳动用工风险", method: "基础问卷检查", status: "medium", statusLabel: "中风险", issue: "部分员工资料或社保状态需要补充核验" }
           : { key: "labor", title: "劳动用工风险", method: "基础问卷检查", status: "pass", statusLabel: "基础检查通过", issue: "问卷显示合同与社保基础事项已完成，内容仍待人工核验" },
-    { key: "food", title: "食品安全风险", method: "待人工核验", status: "pending", statusLabel: "待核验", issue: "需补充进货台账、健康证、后厨与储存情况" },
+    categoryNeedsReview > 0
+      ? { key: "food", title: "食品安全风险", method: "基础问卷检查", status: "medium", statusLabel: "中风险", issue: `${categoryLabel}专项问卷发现 ${categoryNeedsReview} 项需要进一步核验` }
+      : { key: "food", title: "食品安全风险", method: "待人工核验", status: "pending", statusLabel: "待核验", issue: `${categoryLabel}专项问卷未见明显提示，仍需核验进货、健康证、后厨与储存情况` },
     answers.foodLicense === "yes"
       ? { key: "license", title: "营业资质风险", method: "基础问卷检查", status: "pass", statusLabel: "基础检查通过", issue: "已确认持证，证照有效期与经营范围仍待人工核验" }
       : answers.foodLicense === "no"
@@ -159,6 +242,7 @@ function buildRestaurantReport(answers: Answers, menuAnalysis: Analysis | null):
   const score = Math.max(0, 100 - high * 15 - medium * 8 - pending * 3);
   const missingMaterials = [
     !menuAnalysis && "菜单或外卖页面截图",
+    categoryNeedsReview > 0 && `${categoryLabel}专项经营资料与现场记录`,
     answers.foodLicense !== "yes" && "食品经营许可证",
     employeeCount > 0 && "劳动合同与社保缴纳记录",
     "食品进货台账、员工健康证与后厨检查资料",
@@ -180,6 +264,7 @@ export default function Home() {
   const [error, setError] = useState("");
   const fileInput = useRef<HTMLInputElement>(null);
   const previews = useMemo(() => files.map((file) => ({ file, url: URL.createObjectURL(file) })), [files]);
+  const selectedCategoryProfile = answers.category ? categoryProfiles[answers.category] : null;
 
   function startCheck() {
     setView("questionnaire");
@@ -233,7 +318,9 @@ export default function Home() {
 
   async function submitCheck(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!answers.businessType || !answers.employeeCount || !answers.laborContracts || !answers.socialInsurance || !answers.foodLicense || !answers.riskyPromotion || !answers.recentComplaint || !answers.uploadMenu) {
+    const selectedCategoryQuestions = answers.category ? categoryProfiles[answers.category].questions : [];
+    const categoryComplete = selectedCategoryQuestions.every(([key]) => Boolean(answers.categoryChecks[key]));
+    if (!answers.category || !categoryComplete || !answers.businessType || !answers.employeeCount || !answers.laborContracts || !answers.socialInsurance || !answers.foodLicense || !answers.riskyPromotion || !answers.recentComplaint || !answers.uploadMenu) {
       setError("请完成所有必填问题后再生成体检报告。");
       return;
     }
@@ -247,8 +334,22 @@ export default function Home() {
       let menuAnalysis: Analysis | null = null;
       if (answers.uploadMenu === "yes") {
         const form = new FormData();
+        const categoryProfile = categoryProfiles[answers.category];
+        const answerLabel: Record<Exclude<CategoryAnswer, "">, string> = {
+          yes: "有／涉及",
+          no: "没有",
+          unsure: "不确定",
+        };
+        const categoryContext = categoryProfile.questions
+          .map(([key, title]) => `${title}：${answerLabel[answers.categoryChecks[key] as Exclude<CategoryAnswer, "">]}`)
+          .join("\n");
         form.append("type", "menu");
-        form.append("note", note);
+        form.append("note", [
+          `门店品类：${categoryProfile.label}`,
+          `经营方式：${answers.businessType === "both" ? "堂食＋外卖" : answers.businessType === "delivery" ? "外卖" : "堂食"}`,
+          categoryContext,
+          note.trim() ? `商家补充说明：${note.trim()}` : "",
+        ].filter(Boolean).join("\n"));
         files.forEach((file) => form.append("images", file));
         const response = await fetch("/api/analyze", { method: "POST", body: form });
         const data = (await response.json()) as { result?: Analysis; error?: string };
@@ -335,14 +436,27 @@ export default function Home() {
           <div className="questionnaire-intro"><p>餐盾会主动引导</p><h1>先了解你的门店</h1><span>请按真实情况填写。问卷只做初步风险识别，不替代律师、监管部门或专业机构的正式审核。</span></div>
           <form className="check-form" onSubmit={submitCheck}>
             <Question index="01" title="门店名称" optional><input value={answers.storeName} onChange={(event) => setAnswers({ ...answers, storeName: event.target.value })} placeholder="例如：闽秋柒面线糊" /></Question>
-            <Question index="02" title="经营类型"><Choice name="businessType" value={answers.businessType} options={[["dinein", "堂食"], ["delivery", "外卖"], ["both", "堂食 + 外卖"]]} onChange={(value) => setAnswers({ ...answers, businessType: value as Answers["businessType"] })} /></Question>
-            <Question index="03" title="员工人数"><input type="number" min="0" inputMode="numeric" value={answers.employeeCount} onChange={(event) => setAnswers({ ...answers, employeeCount: event.target.value })} placeholder="请输入当前员工人数，没有员工填 0" /></Question>
-            <Question index="04" title="是否已签劳动合同"><Choice name="laborContracts" value={answers.laborContracts} options={[["all", "全部已签"], ["partial", "部分已签"], ["none", "均未签"], ["na", "没有员工"]]} onChange={(value) => setAnswers({ ...answers, laborContracts: value as Answers["laborContracts"] })} /></Question>
-            <Question index="05" title="是否给员工缴纳社保"><Choice name="socialInsurance" value={answers.socialInsurance} options={[["all", "全部已缴"], ["partial", "部分已缴"], ["none", "均未缴"], ["na", "没有员工"]]} onChange={(value) => setAnswers({ ...answers, socialInsurance: value as Answers["socialInsurance"] })} /></Question>
-            <Question index="06" title="是否有食品经营许可证"><Choice name="foodLicense" value={answers.foodLicense} options={[["yes", "有"], ["no", "没有"], ["unsure", "不确定 / 待核验"]]} onChange={(value) => setAnswers({ ...answers, foodLicense: value as Answers["foodLicense"] })} /></Question>
-            <Question index="07" title="是否使用以下宣传表达" description="第一、最好吃、0添加、纯天然、老字号、非遗、祖传等"><Choice name="riskyPromotion" value={answers.riskyPromotion} options={[["yes", "有使用"], ["no", "没有使用"], ["unsure", "不确定"]]} onChange={(value) => setAnswers({ ...answers, riskyPromotion: value as Answers["riskyPromotion"] })} /></Question>
-            <Question index="08" title="近期是否收到投诉" description="包括消费者、外卖平台或市场监管部门的反馈"><Choice name="recentComplaint" value={answers.recentComplaint} options={[["yes", "收到过"], ["no", "没有"]]} onChange={(value) => setAnswers({ ...answers, recentComplaint: value as Answers["recentComplaint"] })} /></Question>
-            <Question index="09" title="是否上传菜单或外卖页面进行检查"><Choice name="uploadMenu" value={answers.uploadMenu} options={[["yes", "现在上传，进行 AI 深度检测"], ["no", "暂不上传，先看基础体检"]]} onChange={(value) => setAnswers({ ...answers, uploadMenu: value as Answers["uploadMenu"] })} /></Question>
+            <Question index="02" title="你的门店属于什么品类？" description="选择后，餐盾会结合这个品类追加专项问题"><Choice name="category" value={answers.category} options={categoryOptions} onChange={(value) => setAnswers({ ...answers, category: value as RestaurantCategory, categoryChecks: {} })} /></Question>
+            <Question index="03" title="经营类型"><Choice name="businessType" value={answers.businessType} options={[["dinein", "堂食"], ["delivery", "外卖"], ["both", "堂食 + 外卖"]]} onChange={(value) => setAnswers({ ...answers, businessType: value as Answers["businessType"] })} /></Question>
+
+            {selectedCategoryProfile && (
+              <div className="category-question-block">
+                <div className="category-question-head"><span>品类专项检查</span><h2>{selectedCategoryProfile.label}需要重点了解</h2><p>以下问题只用于发现需要进一步核验的线索，不直接认定违规。</p></div>
+                {selectedCategoryProfile.questions.map(([key, title, description], index) => (
+                  <Question key={key} index={`S${index + 1}`} title={title} description={description}>
+                    <Choice name={`category-${key}`} value={answers.categoryChecks[key] || ""} options={[["yes", "有 / 涉及"], ["no", "没有"], ["unsure", "不确定"]]} onChange={(value) => setAnswers({ ...answers, categoryChecks: { ...answers.categoryChecks, [key]: value as CategoryAnswer } })} />
+                  </Question>
+                ))}
+              </div>
+            )}
+
+            <Question index="04" title="员工人数"><input type="number" min="0" inputMode="numeric" value={answers.employeeCount} onChange={(event) => setAnswers({ ...answers, employeeCount: event.target.value })} placeholder="请输入当前员工人数，没有员工填 0" /></Question>
+            <Question index="05" title="是否已签劳动合同"><Choice name="laborContracts" value={answers.laborContracts} options={[["all", "全部已签"], ["partial", "部分已签"], ["none", "均未签"], ["na", "没有员工"]]} onChange={(value) => setAnswers({ ...answers, laborContracts: value as Answers["laborContracts"] })} /></Question>
+            <Question index="06" title="是否给员工缴纳社保"><Choice name="socialInsurance" value={answers.socialInsurance} options={[["all", "全部已缴"], ["partial", "部分已缴"], ["none", "均未缴"], ["na", "没有员工"]]} onChange={(value) => setAnswers({ ...answers, socialInsurance: value as Answers["socialInsurance"] })} /></Question>
+            <Question index="07" title="是否有食品经营许可证"><Choice name="foodLicense" value={answers.foodLicense} options={[["yes", "有"], ["no", "没有"], ["unsure", "不确定 / 待核验"]]} onChange={(value) => setAnswers({ ...answers, foodLicense: value as Answers["foodLicense"] })} /></Question>
+            <Question index="08" title="是否使用以下宣传表达" description="第一、最好吃、0添加、纯天然、老字号、非遗、祖传等"><Choice name="riskyPromotion" value={answers.riskyPromotion} options={[["yes", "有使用"], ["no", "没有使用"], ["unsure", "不确定"]]} onChange={(value) => setAnswers({ ...answers, riskyPromotion: value as Answers["riskyPromotion"] })} /></Question>
+            <Question index="09" title="近期是否收到投诉" description="包括消费者、外卖平台或市场监管部门的反馈"><Choice name="recentComplaint" value={answers.recentComplaint} options={[["yes", "收到过"], ["no", "没有"]]} onChange={(value) => setAnswers({ ...answers, recentComplaint: value as Answers["recentComplaint"] })} /></Question>
+            <Question index="10" title="是否上传菜单或外卖页面进行检查"><Choice name="uploadMenu" value={answers.uploadMenu} options={[["yes", "现在上传，进行 AI 深度检测"], ["no", "暂不上传，先看基础体检"]]} onChange={(value) => setAnswers({ ...answers, uploadMenu: value as Answers["uploadMenu"] })} /></Question>
 
             {answers.uploadMenu === "yes" && (
               <div className="menu-upload-block">
@@ -364,7 +478,7 @@ export default function Home() {
         </section>
       )}
 
-      {view === "report" && report && <RestaurantReportView report={report} storeName={answers.storeName} onAgain={() => setView("questionnaire")} />}
+      {view === "report" && report && <RestaurantReportView report={report} storeName={answers.storeName} categoryLabel={selectedCategoryProfile?.label || ""} onAgain={() => setView("questionnaire")} />}
 
       <footer>
         <div className="brand footer-brand"><span className="brand-mark">餐</span><span>餐盾</span></div>
@@ -383,7 +497,7 @@ function Choice({ name, value, options, onChange }: { name: string; value: strin
   return <div className="choice-grid">{options.map(([optionValue, label]) => <label key={optionValue} className={value === optionValue ? "selected" : ""}><input type="radio" name={name} value={optionValue} checked={value === optionValue} onChange={() => onChange(optionValue)} /><span>{label}</span></label>)}</div>;
 }
 
-function RestaurantReportView({ report, storeName, onAgain }: { report: RestaurantReport; storeName: string; onAgain: () => void }) {
+function RestaurantReportView({ report, storeName, categoryLabel, onAgain }: { report: RestaurantReport; storeName: string; categoryLabel: string; onAgain: () => void }) {
   const counts = {
     high: report.modules.filter((module) => module.status === "high").length,
     medium: report.modules.filter((module) => module.status === "medium").length,
@@ -398,7 +512,7 @@ function RestaurantReportView({ report, storeName, onAgain }: { report: Restaura
       </div>
       <div className="restaurant-report-hero">
         <div className={`score-ring ${tone}`}><strong>{report.score}</strong><span>综合评分</span></div>
-        <div><p>{storeName || "你的门店"}</p><h1>餐厅经营风险体检报告</h1><span>这是基于问卷与已上传资料生成的初步结果。模块标签会明确说明检测深度。</span></div>
+        <div><p>{storeName || "你的门店"}{categoryLabel ? ` · ${categoryLabel}` : ""}</p><h1>餐厅经营风险体检报告</h1><span>这是基于问卷与已上传资料生成的初步结果。模块标签会明确说明检测深度。</span></div>
       </div>
       <div className="report-stats restaurant-stats">
         <div className="report-stat stat-high"><span>高风险</span><strong>{counts.high}</strong><small>建议优先核验</small></div>
