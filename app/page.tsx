@@ -482,7 +482,11 @@ export default function Home() {
 
       <footer>
         <div className="brand footer-brand"><span className="brand-mark">餐</span><span>餐盾</span></div>
-        <p>餐厅经营风险体检平台</p>
+        <p>
+          <a href="https://beian.miit.gov.cn/" target="_blank" rel="noreferrer">
+            沪ICP备2026040092号-1
+          </a>
+        </p>
         <p>体检内容仅作风险识别参考，不构成正式法律意见。</p>
       </footer>
     </main>

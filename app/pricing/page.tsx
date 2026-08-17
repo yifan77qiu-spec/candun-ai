@@ -155,6 +155,9 @@ export default function PricingPage() {
 
       <footer className={styles.footer}>
         <span>餐盾｜餐厅经营风险体检平台</span>
+        <a href="https://beian.miit.gov.cn/" target="_blank" rel="noreferrer">
+          沪ICP备2026040092号-1
+        </a>
         <p>检测内容仅作风险识别参考，不构成正式法律意见。</p>
       </footer>
     </main>
