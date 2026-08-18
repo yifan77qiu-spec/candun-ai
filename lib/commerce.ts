@@ -7,8 +7,8 @@ export const riskCheckProduct = {
   quota: 100,
   sold: 0,
   detectionHref: "/",
-  checkoutHref: "/pricing#unlock",
-  paymentProvider: "reserved-wechat-pay",
+  checkoutHref: "/checkout",
+  paymentProvider: "manual-merchant-qr",
   membershipProvider: "reserved-membership",
   entitlements: {
     free: "risk-summary",

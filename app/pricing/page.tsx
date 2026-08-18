@@ -61,15 +61,15 @@ export default function PricingPage() {
           </ul>
           <Link
             className={styles.buyButton}
-            href={riskCheckProduct.detectionHref}
+            href={riskCheckProduct.checkoutHref}
             data-product-id={riskCheckProduct.id}
             data-payment-provider={riskCheckProduct.paymentProvider}
             data-membership-provider={riskCheckProduct.membershipProvider}
             data-entitlement={riskCheckProduct.entitlements.paid}
           >
-            先免费检测
+            立即扫码支付 ¥18.8
           </Link>
-          <small className={styles.unlockNote}>检测完成后，可选择 ¥18.8 解锁完整报告</small>
+          <small className={styles.unlockNote}>人工核验付款后交付完整报告，不会自动扣款</small>
           <div className={styles.progressText}>
             <span>首批体验用户</span>
             <b>{riskCheckProduct.sold}/{riskCheckProduct.quota}</b>
@@ -104,7 +104,7 @@ export default function PricingPage() {
               <li>法规依据、具体步骤和替换文案</li>
               <li>整改优先级与证明材料清单</li>
             </ul>
-            <Link href={riskCheckProduct.detectionHref}>先免费发现风险 →</Link>
+            <Link href={riskCheckProduct.checkoutHref}>立即付款解锁 →</Link>
           </article>
         </div>
       </section>
@@ -143,13 +143,13 @@ export default function PricingPage() {
           <span>先发现自己的餐厅哪里需要关注，再决定要不要解锁完整整改方案。</span>
         </div>
         <Link
-          href={riskCheckProduct.detectionHref}
+          href={riskCheckProduct.checkoutHref}
           data-product-id={riskCheckProduct.id}
           data-payment-provider={riskCheckProduct.paymentProvider}
           data-membership-provider={riskCheckProduct.membershipProvider}
-          data-entitlement={riskCheckProduct.entitlements.free}
+          data-entitlement={riskCheckProduct.entitlements.paid}
         >
-          立即免费体检 <b>→</b>
+          立即扫码支付 ¥18.8 <b>→</b>
         </Link>
       </section>
 

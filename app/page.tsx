@@ -537,7 +537,7 @@ function RestaurantReportView({ report, storeName, categoryLabel, onAgain }: { r
         </div>
         <aside className="report-sidebar">
           <div className="missing-materials"><span className="step-label">尚未上传或核验</span><h3>待补充资料</h3><ul>{report.missingMaterials.map((material) => <li key={material}>{material}</li>)}</ul></div>
-          <div className="unlock-report restaurant-unlock"><span className="step-label">完整整改方案</span><h3>¥18.8 解锁</h3><p>免费体检负责发现问题，完整报告负责告诉你怎么改。</p><ul><li>全部问题详情与风险原因</li><li>可能投诉或处罚场景</li><li>法规依据或人工确认提示</li><li>具体整改步骤与优先级</li><li>替换文案与证明材料清单</li></ul><Link href="/pricing#unlock" data-product-id="candun-risk-check-v1" data-payment-provider="reserved-wechat-pay" data-membership-provider="reserved-membership" data-entitlement="full-compliance-report">¥18.8 解锁完整整改方案</Link><small>支付尚未接入，点击进入销售说明页，不会自动扣款</small><button className="again-button" onClick={onAgain}>重新体检</button></div>
+          <div className="unlock-report restaurant-unlock"><span className="step-label">完整整改方案</span><h3>¥18.8 解锁</h3><p>免费体检负责发现问题，完整报告负责告诉你怎么改。</p><ul><li>全部问题详情与风险原因</li><li>可能投诉或处罚场景</li><li>法规依据或人工确认提示</li><li>具体整改步骤与优先级</li><li>替换文案与证明材料清单</li></ul><Link href={`/checkout?store=${encodeURIComponent(storeName || "未填写门店")}`} data-product-id="candun-risk-check-v1" data-payment-provider="manual-merchant-qr" data-membership-provider="reserved-membership" data-entitlement="full-compliance-report">¥18.8 立即付款解锁</Link><small>扫码付款后由人工核验并交付完整报告</small><button className="again-button" onClick={onAgain}>重新体检</button></div>
         </aside>
       </div>
     </section>
