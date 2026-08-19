@@ -46,7 +46,7 @@ export default async function CheckoutPage({
         <aside className={styles.payCard}>
           <div className={styles.price}><small>应付</small><span>¥</span><strong>{riskCheckProduct.experiencePrice}</strong></div>
           <div className={styles.qrWrap}>
-            <Image src="/payment/candun-merchant-qr.png" alt="餐盾完整整改报告付款收款码" width={1002} height={1392} priority />
+            <Image src="/payment/candun-merchant-qr.png" alt="餐盾完整整改报告付款收款码" width={1002} height={1392} priority unoptimized />
           </div>
           <p>请使用微信或支付宝扫码付款</p>
           <small>收款方：上海餐帮品牌营销<br />付款后请回到原沟通渠道发送付款凭证</small>
